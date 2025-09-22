@@ -11,13 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("api/nexus/user")
 public class UserController {
 
-
     private final UserService userService;
-
-
     private final SuspectService suspectService;
 
     public UserController(UserService userService, SuspectService suspectService) {
@@ -51,10 +48,5 @@ public class UserController {
     public ResponseEntity<Suspect>  findByIdSuspect(@PathVariable  Long id){
         return new ResponseEntity<>(  this.suspectService.findById(id), HttpStatus.CREATED);
     }
-
-
-
-
-
 
 }

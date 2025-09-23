@@ -10,10 +10,17 @@ public class Suspect {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable=false)
     private String name;
+
     private int age;
+
     private String urlImage;
+
+    @Column(nullable=false, unique = true, length = 14)
     private String cpf;
+
     private String description;
 
 

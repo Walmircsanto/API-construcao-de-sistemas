@@ -1,10 +1,8 @@
 package br.com.construcao.sistemas.service;
 
-import br.com.construcao.sistemas.controller.dto.request.LoginRequest;
-import br.com.construcao.sistemas.controller.dto.response.TokenResponse;
+import br.com.construcao.sistemas.controller.dto.request.login.LoginRequest;
+import br.com.construcao.sistemas.controller.dto.response.login.TokenResponse;
 import br.com.construcao.sistemas.model.User;
-import br.com.construcao.sistemas.model.enums.AuthProvider;
-import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

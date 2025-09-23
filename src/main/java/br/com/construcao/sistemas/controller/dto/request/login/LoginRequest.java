@@ -1,4 +1,4 @@
-package br.com.construcao.sistemas.controller.dto.request;
+package br.com.construcao.sistemas.controller.dto.request.login;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

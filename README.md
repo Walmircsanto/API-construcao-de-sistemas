@@ -23,7 +23,7 @@ API REST para gerenciamento de usuários e suspeitos, desenvolvida com Spring Bo
 
 ### 1. Clone o repositório
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/Walmircsanto/API-construcao-de-sistemas
 cd contrucao-sistemas
 ```
 

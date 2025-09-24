@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/nexus/auth/**").permitAll()
                         .requestMatchers("/api/nexus/user/**").permitAll()
-                        .requestMatchers("/api/nexus/suspects/**").permitAll()
+                        .requestMatchers("/api/nexus/suspects/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

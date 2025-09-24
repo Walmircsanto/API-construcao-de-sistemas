@@ -11,6 +11,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("api/nexus/suspects")
@@ -23,8 +26,8 @@ public class SuspectsController {
     }
 
     @PostMapping
-    public ResponseEntity<SuspectResponse> create(@Valid @RequestBody CreateSuspectRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(suspectService.create(req));
+    public ResponseEntity<SuspectResponse> create(@Valid  @RequestPart  CreateSuspectRequest req, @RequestPart MultipartFile file) throws IOException {
+        return ResponseEntity.status(HttpStatus.CREATED).body(suspectService.create(req, file));
     }
 
     @GetMapping("/{id}")

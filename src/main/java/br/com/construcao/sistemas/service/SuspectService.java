@@ -7,12 +7,15 @@ import br.com.construcao.sistemas.controller.dto.request.suspect.UpdateSuspectRe
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
 import br.com.construcao.sistemas.controller.exceptions.ConflictException;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
+import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.repository.SuspectRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -20,17 +23,26 @@ public class SuspectService {
 
     private final SuspectRepository suspectRepository;
     private final MyModelMapper mapper;
+    private final UploadFiles uploadFiles;
 
-    public SuspectService(SuspectRepository suspectRepository, MyModelMapper mapper) {
+    public SuspectService(SuspectRepository suspectRepository, MyModelMapper mapper, UploadFiles uploadFiles) {
         this.suspectRepository = suspectRepository;
         this.mapper = mapper;
+        this.uploadFiles = uploadFiles;
     }
 
-    public SuspectResponse create(CreateSuspectRequest req){
+    public SuspectResponse create(CreateSuspectRequest req, MultipartFile file) throws IOException {
         if (suspectRepository.existsByCpf(req.getCpf())) throw new ConflictException("CPF já cadastrado");
 
         Suspect s = mapper.mapTo(req, Suspect.class);
-        return mapper.mapTo(suspectRepository.save(s), SuspectResponse.class);
+        String urlImgS3 = this.uploadFiles.putObject(file);
+        if(urlImgS3 != null){
+            s.setUrlImage(urlImgS3);
+            return mapper.mapTo(suspectRepository.save(s), SuspectResponse.class);
+        }else {
+            throw new InternalServerErrorException("falha ao salvar no bucket");
+        }
+
     }
 
     public SuspectResponse get(Long id){

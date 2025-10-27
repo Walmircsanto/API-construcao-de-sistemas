@@ -17,7 +17,7 @@ public class MyModelMapper {
     public <D, T> List<D> toList(List<T> entityList, Class<D> outClass) {
         return entityList.stream()
                 .map(entity -> MODEL_MAPPER.map(entity, outClass))
-                .collect(Collectors.toList());
+                .toList();
     }
 
 }

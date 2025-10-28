@@ -1,11 +1,10 @@
 package br.com.construcao.sistemas.model;
 
-import br.com.construcao.sistemas.model.enums.AuditAction;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "tb_audit_log")
+@Table(name = "tb_access_log")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,22 +12,16 @@ import lombok.*;
 @Builder
 public class AuditLog extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "actor_user_id")
-    private User actor;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AuditAction action;
-
-    @Column(nullable = false)
-    private String entityType;
-
-    private Long entityId;
-
-    @Lob
-    private String details;
+    private String method;
+    private String path;
+    private Integer statusCode;
+    private String userEmail;
+    private String ip;
+    private String userAgent;
+    private Long responseTimeMs;
+    private String requestId;
 }

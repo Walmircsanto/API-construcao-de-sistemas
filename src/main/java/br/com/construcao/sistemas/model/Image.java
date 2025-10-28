@@ -22,7 +22,7 @@ public class Image extends BaseEntity {
     private OwnerType ownerType;
 
     @Column(nullable = false)
-    private Long ownerId;
+    private Long suspectId;
 
     @Column(nullable = false, length = 512)
     private String url;

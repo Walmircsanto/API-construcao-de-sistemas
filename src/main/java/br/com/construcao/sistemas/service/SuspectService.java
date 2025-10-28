@@ -116,7 +116,7 @@ public class SuspectService {
 
         Image img = Image.builder()
                 .ownerType(OwnerType.SUSPECT)
-                .ownerId(suspectId)
+                .suspectId(suspectId)
                 .url(url)
                 .contentType(file.getContentType())
                 .sizeBytes(file.getSize())

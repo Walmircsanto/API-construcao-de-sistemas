@@ -1,6 +1,6 @@
 package br.com.construcao.sistemas.config;
 
-import br.com.construcao.sistemas.model.AccessLog;
+import br.com.construcao.sistemas.model.AuditLog;
 import br.com.construcao.sistemas.repository.AccessLogRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,7 +29,7 @@ public class AccessLogFilter extends OncePerRequestFilter {
         try {
             chain.doFilter(req, res);
         } finally {
-            AccessLog log = new AccessLog();
+            AuditLog log = new AuditLog();
             log.setMethod(req.getMethod());
             log.setPath(req.getRequestURI());
             log.setStatusCode(res.getStatus());

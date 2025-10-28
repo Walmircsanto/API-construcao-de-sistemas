@@ -1,18 +1,17 @@
 package br.com.construcao.sistemas.model;
 
-
-import br.com.construcao.sistemas.model.enums.SuspectStatus;
+import br.com.construcao.sistemas.model.enums.ServiceType;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "tb_suspect")
+@Table(name = "tb_emergency_contact")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Suspect extends BaseEntity {
+public class EmergencyContact extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,15 +19,10 @@ public class Suspect extends BaseEntity {
     @Column(nullable=false)
     private String name;
 
-    private Integer age;
-
-    @Column(nullable=false, unique = true, length = 14)
-    private String cpf;
-
-    private String description;
+    @Column(nullable=false, length = 32)
+    private String phone;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
-    private SuspectStatus suspectStatus = SuspectStatus.FORAGIDO;
+    private ServiceType serviceType;
 }

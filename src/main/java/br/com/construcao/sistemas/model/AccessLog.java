@@ -1,9 +1,7 @@
 package br.com.construcao.sistemas.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 
@@ -12,22 +10,20 @@ import java.time.Instant;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AccessLog {
+@AllArgsConstructor
+@Builder
+public class AccessLog extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String method;
-
     private String path;
-
-    private Integer status;
-
+    private Integer statusCode;
     private String userEmail;
-
     private String ip;
-
-    @Column(columnDefinition = "timestamp")
-    private Instant timestamp = Instant.now();
+    private String userAgent;
+    private Long responseTimeMs;
+    private String requestId;
 }

@@ -18,9 +18,7 @@ public class CreateSuspectRequest {
     private String name;
 
     @Min(0)
-    private int age;
-
-    private String urlImage;
+    private Integer age;
 
     @NotBlank
     private String cpf;

@@ -32,7 +32,7 @@ public class AccessLogFilter extends OncePerRequestFilter {
             AccessLog log = new AccessLog();
             log.setMethod(req.getMethod());
             log.setPath(req.getRequestURI());
-            log.setStatus(res.getStatus());
+            log.setStatusCode(res.getStatus());
             log.setIp(req.getRemoteAddr());
 
             Authentication a = SecurityContextHolder.getContext().getAuthentication();

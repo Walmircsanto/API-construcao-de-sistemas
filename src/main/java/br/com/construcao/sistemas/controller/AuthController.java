@@ -1,6 +1,6 @@
 package br.com.construcao.sistemas.controller;
 
-import br.com.construcao.sistemas.config.AccessLogFilter;
+import br.com.construcao.sistemas.config.filters.AccessLogFilter;
 import br.com.construcao.sistemas.controller.dto.request.login.LoginRequest;
 import br.com.construcao.sistemas.controller.dto.response.login.TokenResponse;
 import br.com.construcao.sistemas.service.AuthService;

@@ -42,6 +42,6 @@ public class Incident extends BaseEntity {
     @Column(length = 2000)
     private String notes;
 
-    @OneToMany(mappedBy = "suspect", cascade = CascadeType.ALL, orphanRemoval = false)
+    @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Image> images = new ArrayList<>();
 }

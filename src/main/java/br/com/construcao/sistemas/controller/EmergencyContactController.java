@@ -8,6 +8,7 @@ import br.com.construcao.sistemas.service.EmergencyContactService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,13 +17,13 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/emergency-contacts")
+@RequestMapping("api/nexus/emergency-contacts")
 @RequiredArgsConstructor
 public class EmergencyContactController {
 
     private final EmergencyContactService service;
 
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<EmergencyContactResponse> create(
             @RequestPart("data") CreateEmergencyContactRequest req,
             @RequestPart(value = "file", required = false) MultipartFile file

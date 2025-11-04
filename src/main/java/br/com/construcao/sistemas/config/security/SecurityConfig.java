@@ -1,6 +1,6 @@
 package br.com.construcao.sistemas.config.security;
 
-import br.com.construcao.sistemas.config.AccessLogFilter;
+import br.com.construcao.sistemas.config.filters.AccessLogFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/nexus/auth/**").permitAll()
                         .requestMatchers("/api/nexus/user/**").permitAll()
+                        .requestMatchers("/api/nexus/emergency-contacts/**").permitAll()
                         .requestMatchers("/api/nexus/suspects/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

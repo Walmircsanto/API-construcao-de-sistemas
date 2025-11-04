@@ -21,8 +21,17 @@ public class Image extends BaseEntity {
     @Column(nullable = false)
     private OwnerType ownerType;
 
-    @Column(nullable = false)
-    private Long suspectId;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "suspect_id")
+    private Suspect suspect;
+
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "emergency_contact_id")
+    private EmergencyContact emergencyContact;
+
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "incident_id")
+    private Incident incident;
 
     @Column(nullable = false, length = 512)
     private String url;

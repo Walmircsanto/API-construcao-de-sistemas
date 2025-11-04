@@ -43,7 +43,7 @@ public class SuspectService {
         s = suspectRepository.save(s);
 
         if (file != null && !file.isEmpty()) {
-            salvarImagemDoSuspect(s.getId(), file);
+            salvarImagemDoSuspect(s, file);
         }
 
         return montarResponseComImagens(s);
@@ -90,14 +90,14 @@ public class SuspectService {
     public ImageResponse addImage(Long suspectId, MultipartFile file) throws IOException {
         Suspect s = suspectRepository.findById(suspectId)
                 .orElseThrow(() -> new NotFoundException("Suspeito não encontrado"));
-        Image img = salvarImagemDoSuspect(s.getId(), file);
+        Image img = salvarImagemDoSuspect(s, file);
         return mapper.mapTo(img, ImageResponse.class);
     }
 
     @Transactional(readOnly = true)
     public List<ImageResponse> listImages(Long suspectId){
         if (!suspectRepository.existsById(suspectId)) throw new NotFoundException("Suspeito não encontrado");
-        return imageRepository.findByOwnerTypeAndOwnerId(OwnerType.SUSPECT, suspectId)
+        return imageRepository.findByOwnerTypeAndSuspectId(OwnerType.SUSPECT, suspectId)
                 .stream().map(i -> mapper.mapTo(i, ImageResponse.class))
                 .toList();
     }
@@ -108,7 +108,7 @@ public class SuspectService {
         }
     }
 
-    private Image salvarImagemDoSuspect(Long suspectId, MultipartFile file) throws IOException {
+    private Image salvarImagemDoSuspect(Suspect suspect, MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) throw new BadRequestException("Arquivo de imagem ausente");
 
         String url = uploadFiles.putObject(file);
@@ -116,7 +116,7 @@ public class SuspectService {
 
         Image img = Image.builder()
                 .ownerType(OwnerType.SUSPECT)
-                .suspectId(suspectId)
+                .suspect(suspect)
                 .url(url)
                 .contentType(file.getContentType())
                 .sizeBytes(file.getSize())
@@ -127,7 +127,7 @@ public class SuspectService {
 
     private SuspectResponse montarResponseComImagens(Suspect s) {
         SuspectResponse resp = mapper.mapTo(s, SuspectResponse.class);
-        List<Image> imgs = imageRepository.findByOwnerTypeAndOwnerId(OwnerType.SUSPECT, s.getId());
+        List<Image> imgs = imageRepository.findByOwnerTypeAndSuspectId(OwnerType.SUSPECT, s.getId());
         resp.setImages(imgs.stream().map(i -> mapper.mapTo(i, ImageResponse.class)).toList());
         return resp;
     }

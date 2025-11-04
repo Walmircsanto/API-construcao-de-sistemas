@@ -5,6 +5,9 @@ import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "tb_suspect")
 @Getter
@@ -31,4 +34,7 @@ public class Suspect extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private SuspectStatus suspectStatus = SuspectStatus.FORAGIDO;
+
+    @OneToMany(mappedBy = "suspect", cascade = CascadeType.ALL, orphanRemoval = false)
+    private List<Image> images = new ArrayList<>();
 }

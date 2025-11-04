@@ -4,6 +4,9 @@ import br.com.construcao.sistemas.model.enums.IncidentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "tb_incident")
 @Getter
@@ -38,4 +41,7 @@ public class Incident extends BaseEntity {
 
     @Column(length = 2000)
     private String notes;
+
+    @OneToMany(mappedBy = "suspect", cascade = CascadeType.ALL, orphanRemoval = false)
+    private List<Image> images = new ArrayList<>();
 }

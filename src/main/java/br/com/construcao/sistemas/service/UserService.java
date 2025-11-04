@@ -92,8 +92,8 @@ public class UserService {
             throw new UnauthorizedException("Senha atual inválida");
         }
 
-        if (req.getNewPassword() == null || req.getNewPassword().length() < 8) {
-            throw new BadRequestException("Senha deve ter pelo menos 8 caracteres");
+        if (req.getNewPassword() == null || req.getNewPassword().length() < 6) {
+            throw new BadRequestException("Senha deve ter pelo menos 6 caracteres");
         }
 
         user.setPassword(encoder.encode(req.getNewPassword()));

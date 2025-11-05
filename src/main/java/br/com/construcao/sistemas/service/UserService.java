@@ -105,4 +105,8 @@ public class UserService {
         if (!repo.existsById(id)) throw new NotFoundException("Usuário não encontrado");
         repo.deleteById(id);
     }
+
+    public boolean userExistByEmail(String email){
+        return repo.existsByEmail(email);
+    }
 }

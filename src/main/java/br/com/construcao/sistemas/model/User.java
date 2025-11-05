@@ -45,6 +45,9 @@ public class User extends BaseEntity{
     private boolean enabled = true;
     private boolean locked = false;
 
+    @Column(nullable=true)
+    private String imgProfile;
+
     private Integer failedLogins = 0;
     private Instant lastFailureAt;
 }

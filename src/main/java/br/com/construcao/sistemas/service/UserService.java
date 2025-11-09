@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -105,4 +106,22 @@ public class UserService {
         if (!repo.existsById(id)) throw new NotFoundException("Usuário não encontrado");
         repo.deleteById(id);
     }
+
+    @Transactional
+    public void clearFcmToken(Long userId) {
+        User u = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        u.setFcmToken(null);
+        u.setFcmTokenUpdatedAt(Instant.now());
+        repo.save(u);
+    }
+
+    @Transactional
+    public void updateFcmToken(Long userId, String token) {
+        if (token == null || token.isBlank()) throw new BadRequestException("Token FCM inválido");
+        User u = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        u.setFcmToken(token);
+        u.setFcmTokenUpdatedAt(Instant.now());
+        repo.save(u);
+    }
+
 }

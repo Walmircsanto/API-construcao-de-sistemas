@@ -1,5 +1,6 @@
 package br.com.construcao.sistemas.config.security;
 
+import br.com.construcao.sistemas.config.cors.CorsProperties;
 import br.com.construcao.sistemas.config.filters.AccessLogFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,10 +27,14 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final AccessLogFilter accessLogFilter;
+    private final CorsProperties corsProperties;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, AccessLogFilter accessLogFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          AccessLogFilter accessLogFilter,
+                          CorsProperties corsProperties) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.accessLogFilter = accessLogFilter;
+        this.corsProperties = corsProperties;
     }
 
     @Bean
@@ -59,15 +64,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
 
-        cfg.setAllowedOriginPatterns(List.of("http://localhost:*"));
-
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
-        cfg.setAllowedHeaders(List.of("Authorization","Content-Type","X-Requested-With"));
-        cfg.setAllowCredentials(true);
-        cfg.setMaxAge(Duration.ofHours(1));
+        cfg.setAllowedOrigins(corsProperties.getAllowedOrigins());
+        cfg.setAllowedMethods(corsProperties.getAllowedMethods());
+        cfg.setAllowedHeaders(corsProperties.getAllowedHeaders());
+        cfg.setAllowCredentials(corsProperties.isAllowCredentials());
+        cfg.setMaxAge(Duration.ofSeconds(corsProperties.getMaxAge()));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg); // aplica em toda a API
+        source.registerCorsConfiguration("/**", cfg);
         return source;
     }
 }

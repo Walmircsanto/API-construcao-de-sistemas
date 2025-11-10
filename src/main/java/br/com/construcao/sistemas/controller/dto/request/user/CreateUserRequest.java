@@ -1,6 +1,7 @@
 package br.com.construcao.sistemas.controller.dto.request.user;
 
 import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.util.annotations.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -15,13 +16,15 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CreateUserRequest {
 
-    @NotBlank
+    @NotBlank(message = "O nome é obrigatório")
     private String name;
 
-    @Email
+    @NotBlank(message = "O e-mail é obrigatório")
+    @Email(message = "E-mail inválido")
     private String email;
 
-    @Size(min=6, max=15)
+    @NotBlank(message = "A senha é obrigatória")
+    @ValidPassword
     private String password;
 
     private Role role;

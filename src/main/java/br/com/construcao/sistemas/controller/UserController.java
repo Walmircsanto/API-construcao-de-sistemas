@@ -4,15 +4,15 @@ import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordReq
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
-import br.com.construcao.sistemas.model.Suspect;
-import br.com.construcao.sistemas.model.User;
-import br.com.construcao.sistemas.service.SuspectService;
 import br.com.construcao.sistemas.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -25,36 +25,44 @@ public class UserController {
         this.service = userService;
     }
 
-    @PostMapping
-    public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest req){
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> create(
+            @Valid @RequestPart("data") CreateUserRequest req,
+            @RequestPart(name = "file", required = false) MultipartFile file
+    ) throws IOException {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req, file));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> findById(@PathVariable Long id){
+    public ResponseEntity<UserResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(service.get(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> list(){
+    public ResponseEntity<List<UserResponse>> list() {
         return ResponseEntity.ok(service.list());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> update(@PathVariable Long id,
-                                               @RequestBody UpdateUserRequest req){
-        return ResponseEntity.ok(service.update(id, req));
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestPart("data") UpdateUserRequest req,
+            @RequestPart(name = "file", required = false) MultipartFile file
+    ) throws IOException {
+        return ResponseEntity.ok(service.update(id, req, file));
     }
 
     @PatchMapping("/{id}/password")
     public ResponseEntity<Void> updatePassword(@PathVariable Long id,
-                                               @Valid @RequestBody UpdatePasswordRequest req){
+                                               @Valid @RequestBody UpdatePasswordRequest req) {
         service.updatePassword(id, req);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

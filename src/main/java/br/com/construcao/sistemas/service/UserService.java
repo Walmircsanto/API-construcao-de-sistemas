@@ -5,40 +5,43 @@ import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
+import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
 import br.com.construcao.sistemas.controller.exceptions.BadRequestException;
 import br.com.construcao.sistemas.controller.exceptions.ConflictException;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
+import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.exception.UnauthorizedException;
+import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.User;
 import br.com.construcao.sistemas.model.enums.AuthProvider;
+import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository repo;
+    private final ImageRepository imageRepo;
+    private final UploadFiles uploadFiles;
     private final PasswordEncoder encoder;
     private final MyModelMapper mapper;
 
-    public UserService(UserRepository userRepository, PasswordEncoder encoder, MyModelMapper mapper) {
-        this.repo = userRepository;
-        this.encoder = encoder;
-        this.mapper = mapper;
-    }
-
     @Transactional
-    public UserResponse create(CreateUserRequest req){
+    public UserResponse create(CreateUserRequest req, @Nullable MultipartFile file) throws IOException {
         String email = req.getEmail().trim().toLowerCase();
         if (repo.existsByEmail(email)) throw new ConflictException("E-mail já cadastrado");
 
@@ -48,23 +51,30 @@ public class UserService {
         if (user.getRole() == null) user.setRole(Role.SECURITY);
         if (user.getProvider() == null) user.setProvider(AuthProvider.LOCAL);
 
-        return mapper.mapTo(repo.save(user), UserResponse.class);
+        user = repo.save(user);
+
+        if (file != null && !file.isEmpty()) {
+            imageRepo.deleteByUser_IdAndKind(user.getId(), OwnerType.USER);
+            Image img = saveProfileImage(user, file);
+        }
+
+        return enrichWithProfileImage(mapper.mapTo(user, UserResponse.class), user.getId());
     }
 
     public UserResponse get(Long id){
-        User user = repo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
-        return mapper.mapTo(user, UserResponse.class);
+        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        return enrichWithProfileImage(mapper.mapTo(user, UserResponse.class), id);
     }
 
     public List<UserResponse> list(){
-        return mapper.toList(repo.findAll(), UserResponse.class);
+        return repo.findAll().stream()
+                .map(u -> enrichWithProfileImage(mapper.mapTo(u, UserResponse.class), u.getId()))
+                .toList();
     }
 
     @Transactional
-    public UserResponse update(Long id, UpdateUserRequest req){
-        User user = repo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+    public UserResponse update(Long id, UpdateUserRequest req, @Nullable MultipartFile file) throws IOException {
+        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
         if (req.getName() != null) user.setName(req.getName());
 
@@ -80,19 +90,36 @@ public class UserService {
         if (req.getEnabled() != null) user.setEnabled(req.getEnabled());
         if (req.getLocked() != null) user.setLocked(req.getLocked());
 
-        return mapper.mapTo(repo.save(user), UserResponse.class);
+        user = repo.save(user);
+
+        if (file != null && !file.isEmpty()) {
+            imageRepo.deleteByUser_IdAndKind(user.getId(), OwnerType.USER);
+            String url = uploadFiles.putObject(file);
+            if (url == null) throw new InternalServerErrorException("Falha ao salvar no bucket");
+
+            Image img = Image.builder()
+                    .user(user)
+                    .ownerType(OwnerType.USER)
+                    .url(url)
+                    .contentType(file.getContentType())
+                    .sizeBytes(file.getSize())
+                    .build();
+            imageRepo.save(img);
+        }
+
+        UserResponse resp = mapper.mapTo(user, UserResponse.class);
+        imageRepo.findFirstByUser_IdAndKind(user.getId(), OwnerType.USER)
+                .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
+        return resp;
     }
 
     @Transactional
     public void updatePassword(Long id, UpdatePasswordRequest req){
-        User user = repo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
-        if (req.getCurrentPassword() != null &&
-                !encoder.matches(req.getCurrentPassword(), user.getPassword())) {
+        if (req.getCurrentPassword() != null && !encoder.matches(req.getCurrentPassword(), user.getPassword())) {
             throw new UnauthorizedException("Senha atual inválida");
         }
-
         if (req.getNewPassword() == null || req.getNewPassword().length() < 6) {
             throw new BadRequestException("Senha deve ter pelo menos 6 caracteres");
         }
@@ -100,7 +127,6 @@ public class UserService {
         user.setPassword(encoder.encode(req.getNewPassword()));
         repo.save(user);
     }
-
 
     public void delete(Long id){
         if (!repo.existsById(id)) throw new NotFoundException("Usuário não encontrado");
@@ -124,4 +150,36 @@ public class UserService {
         repo.save(u);
     }
 
+    @Transactional
+    public ImageResponse setProfileImage(Long userId, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) throw new BadRequestException("Arquivo de imagem ausente");
+
+        User user = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+
+        imageRepo.deleteByUser_IdAndKind(user.getId(), OwnerType.USER);
+
+        Image img = saveProfileImage(user, file);
+        return new ImageResponse(img.getId(), img.getUrl(), img.getContentType(), img.getSizeBytes());
+    }
+
+    private Image saveProfileImage(User user, MultipartFile file) throws IOException {
+        String url = uploadFiles.putObject(file);
+        if (url == null) throw new InternalServerErrorException("Falha ao salvar no bucket");
+
+        Image img = Image.builder()
+                .user(user)
+                .ownerType(OwnerType.USER)
+                .url(url)
+                .contentType(file.getContentType())
+                .sizeBytes(file.getSize())
+                .build();
+        return imageRepo.save(img);
+    }
+
+    private UserResponse enrichWithProfileImage(UserResponse resp, Long userId) {
+        imageRepo.findFirstByUser_IdAndKind(userId, OwnerType.USER)
+                .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
+        return resp;
+    }
 }
+

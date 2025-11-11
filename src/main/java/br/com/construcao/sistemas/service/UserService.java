@@ -54,7 +54,7 @@ public class UserService {
         user = repo.save(user);
 
         if (file != null && !file.isEmpty()) {
-            imageRepo.deleteByUser_IdAndKind(user.getId(), OwnerType.USER);
+            imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
             Image img = saveProfileImage(user, file);
         }
 
@@ -93,7 +93,7 @@ public class UserService {
         user = repo.save(user);
 
         if (file != null && !file.isEmpty()) {
-            imageRepo.deleteByUser_IdAndKind(user.getId(), OwnerType.USER);
+            imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
             String url = uploadFiles.putObject(file);
             if (url == null) throw new InternalServerErrorException("Falha ao salvar no bucket");
 
@@ -108,7 +108,7 @@ public class UserService {
         }
 
         UserResponse resp = mapper.mapTo(user, UserResponse.class);
-        imageRepo.findFirstByUser_IdAndKind(user.getId(), OwnerType.USER)
+        imageRepo.findFirstByUser_IdAndOwnerType(user.getId(), OwnerType.USER)
                 .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
         return resp;
     }
@@ -156,7 +156,7 @@ public class UserService {
 
         User user = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
-        imageRepo.deleteByUser_IdAndKind(user.getId(), OwnerType.USER);
+        imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
 
         Image img = saveProfileImage(user, file);
         return new ImageResponse(img.getId(), img.getUrl(), img.getContentType(), img.getSizeBytes());
@@ -177,7 +177,7 @@ public class UserService {
     }
 
     private UserResponse enrichWithProfileImage(UserResponse resp, Long userId) {
-        imageRepo.findFirstByUser_IdAndKind(userId, OwnerType.USER)
+        imageRepo.findFirstByUser_IdAndOwnerType(userId, OwnerType.USER)
                 .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
         return resp;
     }

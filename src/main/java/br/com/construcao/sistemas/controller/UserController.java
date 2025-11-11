@@ -28,7 +28,7 @@ public class UserController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponse> create(
-            @Valid @RequestPart("data") CreateUserRequest req,
+            @Valid @RequestPart("req") CreateUserRequest req,
             @RequestPart(name = "file", required = false) MultipartFile file
     ) throws IOException {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req, file));
@@ -48,7 +48,7 @@ public class UserController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponse> update(
             @PathVariable Long id,
-            @Valid @RequestPart("data") UpdateUserRequest req,
+            @Valid @RequestPart("req") UpdateUserRequest req,
             @RequestPart(name = "file", required = false) MultipartFile file
     ) throws IOException {
         return ResponseEntity.ok(service.update(id, req, file));

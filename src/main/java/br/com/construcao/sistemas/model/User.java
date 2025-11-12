@@ -32,6 +32,12 @@ public class User extends BaseEntity{
     @Column(nullable=false)
     private String password;
 
+    @Column(nullable=false)
+    @Builder.Default
+    private boolean provisionalPassword = false;   // <<< NOVO
+
+    private Instant provisionalPasswordExpiresAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable=false)
     private Role role;

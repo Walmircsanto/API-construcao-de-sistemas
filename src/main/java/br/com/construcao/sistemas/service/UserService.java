@@ -19,6 +19,7 @@ import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
+import br.com.construcao.sistemas.util.helpers.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -38,6 +40,8 @@ public class UserService {
     private final ImageRepository imageRepo;
     private final UploadFiles uploadFiles;
     private final PasswordEncoder encoder;
+    private final PasswordGenerator generator;
+    private final EmailService emailService;
     private final MyModelMapper mapper;
 
     @Transactional
@@ -47,7 +51,15 @@ public class UserService {
 
         User user = mapper.mapTo(req, User.class);
         user.setEmail(email);
-        user.setPassword(encoder.encode(req.getPassword()));
+
+        boolean mustGenerateProvisional = (req.getPassword() == null || req.getPassword().isBlank());
+        boolean markProvisional = Boolean.TRUE.equals(req.getProvisionalPassword()) || mustGenerateProvisional;
+
+        String rawPassword = mustGenerateProvisional ? generator.generate(10) : req.getPassword();
+        user.setPassword(encoder.encode(rawPassword));
+        user.setProvisionalPassword(markProvisional);
+        user.setProvisionalPasswordExpiresAt(markProvisional ? Instant.now().plus(Duration.ofDays(7)) : null);
+
         if (user.getRole() == null) user.setRole(Role.SECURITY);
         if (user.getProvider() == null) user.setProvider(AuthProvider.LOCAL);
 
@@ -55,7 +67,13 @@ public class UserService {
 
         if (file != null && !file.isEmpty()) {
             imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
-            Image img = saveProfileImage(user, file);
+            saveProfileImage(user, file);
+        }
+
+        if (markProvisional) {
+            emailService.sendProvisionalPassword(
+                    user.getEmail(), user.getName(), rawPassword, user.getProvisionalPasswordExpiresAt()
+            );
         }
 
         return enrichWithProfileImage(mapper.mapTo(user, UserResponse.class), user.getId());

@@ -8,6 +8,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -18,12 +20,19 @@ public class EmailService {
 
     @Value("${app.mail.from}")
     private String from;
+
     @Value("${app.url.portal}")
     private String portalUrl;
 
     public void sendProvisionalPassword(String to, String name, String tempPassword, Instant expiresAt) {
         String subject = "Sua senha provisória";
-        String expStr = expiresAt != null ? DateTimeFormatter.ISO_INSTANT.format(expiresAt) : null;
+
+        String expiresFormatted = null;
+        if (expiresAt != null) {
+            ZonedDateTime zdt = expiresAt.atZone(ZoneId.systemDefault());
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            expiresFormatted = fmt.format(zdt);
+        }
 
         StringBuilder body = new StringBuilder()
                 .append("Olá, ").append(name).append("!\n\n")
@@ -31,7 +40,8 @@ public class EmailService {
                 .append("Senha provisória: ").append(tempPassword).append("\n\n")
                 .append("Acesse: ").append(portalUrl).append("\n");
 
-        if (expStr != null) body.append("Validade da senha provisória: ").append(expStr).append("\n");
+        if (expiresFormatted != null)
+            body.append("Validade da senha provisória: ").append(expiresFormatted).append("\n");
 
         body.append("\nRecomendamos alterar sua senha no primeiro acesso.");
 
@@ -44,3 +54,4 @@ public class EmailService {
         mailSender.send(msg);
     }
 }
+

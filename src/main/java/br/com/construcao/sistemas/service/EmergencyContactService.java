@@ -5,7 +5,7 @@ import br.com.construcao.sistemas.controller.dto.request.emergency.CreateEmergen
 import br.com.construcao.sistemas.controller.dto.request.emergency.UpdateEmergencyContactRequest;
 import br.com.construcao.sistemas.controller.dto.response.emergency.EmergencyContactResponse;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
-import br.com.construcao.sistemas.controller.exceptions.ConflictException;
+import br.com.construcao.sistemas.controller.exceptions.BadRequestException;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.model.EmergencyContact;
@@ -15,7 +15,6 @@ import br.com.construcao.sistemas.repository.EmergencyContactRepository;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,7 +36,7 @@ public class EmergencyContactService {
     @Transactional
     public EmergencyContactResponse create(CreateEmergencyContactRequest req, @Nullable MultipartFile file) throws IOException {
         if (req.getPhone() != null && emergencyContactRepository.existsByPhone(req.getPhone())) {
-            throw new ConflictException("Telefone já cadastrado");
+            throw new BadRequestException("Telefone já cadastrado");
         }
 
         EmergencyContact ec = mapper.mapTo(req, EmergencyContact.class);
@@ -71,7 +70,7 @@ public class EmergencyContactService {
         if (req.getName() != null) ec.setName(req.getName());
         if (req.getPhone() != null && !req.getPhone().equals(ec.getPhone())) {
             if (emergencyContactRepository.existsByPhone(req.getPhone())) {
-                throw new ConflictException("Telefone já cadastrado");
+                throw new BadRequestException("Telefone já cadastrado");
             }
             ec.setPhone(req.getPhone());
         }
@@ -83,7 +82,8 @@ public class EmergencyContactService {
 
     @Transactional
     public void delete(Long id) {
-        if (!emergencyContactRepository.existsById(id)) throw new NotFoundException("Contato de emergência não encontrado");
+        if (!emergencyContactRepository.existsById(id))
+            throw new NotFoundException("Contato de emergência não encontrado");
         emergencyContactRepository.deleteById(id);
     }
 
@@ -97,7 +97,8 @@ public class EmergencyContactService {
 
     @Transactional(readOnly = true)
     public List<ImageResponse> listImages(Long emergencyContactId) {
-        if (!emergencyContactRepository.existsById(emergencyContactId)) throw new NotFoundException("Contato de emergência não encontrado");
+        if (!emergencyContactRepository.existsById(emergencyContactId))
+            throw new NotFoundException("Contato de emergência não encontrado");
         return imageRepository.findByOwnerTypeAndEmergencyContactId(OwnerType.EMERGENCY_CONTACT, emergencyContactId)
                 .stream().map(i -> mapper.mapTo(i, ImageResponse.class))
                 .toList();

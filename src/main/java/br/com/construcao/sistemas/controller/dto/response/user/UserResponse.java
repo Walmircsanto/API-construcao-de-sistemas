@@ -1,5 +1,6 @@
 package br.com.construcao.sistemas.controller.dto.response.user;
 
+import br.com.construcao.sistemas.model.enums.AuthProvider;
 import br.com.construcao.sistemas.model.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,6 +16,8 @@ public class UserResponse {
     private String name;
     private String email;
     private Role role;
-    private boolean enabled;
-    private boolean locked;
+    private AuthProvider provider;
+    private Boolean enabled;
+    private Boolean locked;
+    private String profileImageUrl;
 }

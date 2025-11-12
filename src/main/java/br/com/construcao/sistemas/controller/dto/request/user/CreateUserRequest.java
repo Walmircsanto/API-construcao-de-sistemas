@@ -1,6 +1,5 @@
 package br.com.construcao.sistemas.controller.dto.request.user;
 
-import br.com.construcao.sistemas.model.enums.AuthProvider;
 import br.com.construcao.sistemas.model.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -16,10 +15,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CreateUserRequest {
 
-    @NotBlank
+    @NotBlank(message = "O nome é obrigatório")
     private String name;
 
-    @Email
+    @NotBlank(message = "O e-mail é obrigatório")
+    @Email(message = "E-mail inválido")
     private String email;
 
     @Size(min=6, max=15)
@@ -28,6 +28,4 @@ public class CreateUserRequest {
     private String imgProfile;
 
     private Role role;
-
-    private AuthProvider  authProvider;
 }

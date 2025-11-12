@@ -1,4 +1,4 @@
-package br.com.construcao.sistemas.config;
+package br.com.construcao.sistemas.config.filters;
 
 import br.com.construcao.sistemas.model.AuditLog;
 import br.com.construcao.sistemas.repository.AccessLogRepository;

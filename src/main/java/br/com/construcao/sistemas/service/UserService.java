@@ -5,29 +5,43 @@ import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
+import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
 import br.com.construcao.sistemas.controller.exceptions.BadRequestException;
 import br.com.construcao.sistemas.controller.exceptions.ConflictException;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
+import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.exception.UnauthorizedException;
+import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.User;
 import br.com.construcao.sistemas.model.enums.AuthProvider;
+import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import br.com.construcao.sistemas.util.helpers.PasswordGenerator;
+import lombok.RequiredArgsConstructor;
+import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository repo;
+    private final ImageRepository imageRepo;
+    private final UploadFiles uploadFiles;
     private final PasswordEncoder encoder;
+    private final PasswordGenerator generator;
+    private final EmailService emailService;
     private final MyModelMapper mapper;
 
     public UserService(UserRepository userRepository, PasswordEncoder encoder, MyModelMapper mapper) {
@@ -106,7 +120,53 @@ public class UserService {
         repo.deleteById(id);
     }
 
-    public boolean userExistByEmail(String email){
-        return repo.existsByEmail(email);
+    @Transactional
+    public void clearFcmToken(Long userId) {
+        User u = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        u.setFcmToken(null);
+        u.setFcmTokenUpdatedAt(Instant.now());
+        repo.save(u);
+    }
+
+    @Transactional
+    public void updateFcmToken(Long userId, String token) {
+        if (token == null || token.isBlank()) throw new BadRequestException("Token FCM inválido");
+        User u = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        u.setFcmToken(token);
+        u.setFcmTokenUpdatedAt(Instant.now());
+        repo.save(u);
+    }
+
+    @Transactional
+    public ImageResponse setProfileImage(Long userId, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) throw new BadRequestException("Arquivo de imagem ausente");
+
+        User user = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+
+        imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
+
+        Image img = saveProfileImage(user, file);
+        return new ImageResponse(img.getId(), img.getUrl(), img.getContentType(), img.getSizeBytes());
+    }
+
+    private Image saveProfileImage(User user, MultipartFile file) throws IOException {
+        String url = uploadFiles.putObject(file);
+        if (url == null) throw new InternalServerErrorException("Falha ao salvar no bucket");
+
+        Image img = Image.builder()
+                .user(user)
+                .ownerType(OwnerType.USER)
+                .url(url)
+                .contentType(file.getContentType())
+                .sizeBytes(file.getSize())
+                .build();
+        return imageRepo.save(img);
+    }
+
+    private UserResponse enrichWithProfileImage(UserResponse resp, Long userId) {
+        imageRepo.findFirstByUser_IdAndOwnerType(userId, OwnerType.USER)
+                .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
+        return resp;
     }
 }
+

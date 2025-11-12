@@ -5,7 +5,14 @@ import br.com.construcao.sistemas.model.enums.OwnerType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ImageRepository extends JpaRepository<Image, Long> {
-    List<Image> findByOwnerTypeAndOwnerId(OwnerType ownerType, Long ownerId);
+    List<Image> findByOwnerTypeAndSuspectId(OwnerType ownerType, Long suspectId);
+
+    List<Image> findByOwnerTypeAndEmergencyContactId(OwnerType ownerType, Long emergencyId);
+
+    Optional<Image> findFirstByUser_IdAndOwnerType(Long userId, OwnerType ownerType);
+    void deleteByUser_IdAndOwnerType(Long userId, OwnerType kind);
+
 }

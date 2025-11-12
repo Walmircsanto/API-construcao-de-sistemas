@@ -32,6 +32,12 @@ public class User extends BaseEntity{
     @Column(nullable=false)
     private String password;
 
+    @Column(nullable=false)
+    @Builder.Default
+    private boolean provisionalPassword = false;   // <<< NOVO
+
+    private Instant provisionalPasswordExpiresAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable=false)
     private Role role;
@@ -42,6 +48,12 @@ public class User extends BaseEntity{
     @Column(length=64)
     private String googleSub;
 
+    @Column(name = "fcm_token", length = 255)
+    private String fcmToken;
+
+    @Column(name = "fcm_token_updated_at")
+    private Instant fcmTokenUpdatedAt;
+
     private boolean enabled = true;
     private boolean locked = false;
 
@@ -50,4 +62,5 @@ public class User extends BaseEntity{
 
     private Integer failedLogins = 0;
     private Instant lastFailureAt;
+    private Instant lastLoginAt;
 }

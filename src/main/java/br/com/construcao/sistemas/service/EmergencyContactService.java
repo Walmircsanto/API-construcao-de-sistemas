@@ -82,10 +82,14 @@ public class EmergencyContactService {
 
     @Transactional
     public void delete(Long id) {
-        if (!emergencyContactRepository.existsById(id))
-            throw new NotFoundException("Contato de emergência não encontrado");
-        emergencyContactRepository.deleteById(id);
+        EmergencyContact ec = emergencyContactRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Contato de emergência não encontrado"));
+
+        imageRepository.deleteByOwnerTypeAndEmergencyContactId(OwnerType.EMERGENCY_CONTACT, id);
+
+        emergencyContactRepository.delete(ec);
     }
+
 
     @Transactional
     public ImageResponse addImage(Long emergencyContactId, MultipartFile file) throws IOException {

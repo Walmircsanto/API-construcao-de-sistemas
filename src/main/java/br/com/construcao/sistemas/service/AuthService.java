@@ -6,6 +6,7 @@ import br.com.construcao.sistemas.controller.dto.response.login.AuthResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
 import br.com.construcao.sistemas.exception.UnauthorizedException;
 import br.com.construcao.sistemas.model.User;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
@@ -38,7 +39,7 @@ public class AuthService {
         if (!u.isEnabled()) {
             throw new LockedException("Conta desabilitada");
         }
-        if (u.isLocked()) {
+        if (u.isLocked() && u.getStatus() == EnumStatus.BLOQUEADO) {
             throw new LockedException("Conta bloqueada");
         }
 
@@ -49,6 +50,7 @@ public class AuthService {
             u.setLastFailureAt(Instant.now());
             if (fails >= MAX_FAILS) {
                 u.setLocked(true);
+                u.setStatus(EnumStatus.BLOQUEADO);
             }
             users.save(u);
             int restantes = Math.max(0, MAX_FAILS - fails);

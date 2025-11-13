@@ -1,6 +1,7 @@
 package br.com.construcao.sistemas.controller.dto.response.user;
 
 import br.com.construcao.sistemas.model.enums.AuthProvider;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,4 +21,5 @@ public class UserResponse {
     private Boolean enabled;
     private Boolean locked;
     private String profileImageUrl;
+    private EnumStatus status;
 }

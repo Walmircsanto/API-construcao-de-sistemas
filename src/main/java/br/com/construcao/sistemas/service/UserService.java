@@ -5,6 +5,7 @@ import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
+import br.com.construcao.sistemas.controller.dto.response.emergency.EmergencyContactResponse;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
 import br.com.construcao.sistemas.controller.exceptions.BadRequestException;
@@ -21,6 +22,8 @@ import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
 import br.com.construcao.sistemas.util.helpers.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -84,10 +87,9 @@ public class UserService {
         return enrichWithProfileImage(mapper.mapTo(user, UserResponse.class), id);
     }
 
-    public List<UserResponse> list(){
-        return repo.findAll().stream()
-                .map(u -> enrichWithProfileImage(mapper.mapTo(u, UserResponse.class), u.getId()))
-                .toList();
+    public Page<UserResponse> list(Pageable pageable){
+        return repo.findAll(pageable)
+                .map(u -> enrichWithProfileImage(mapper.mapTo(u, UserResponse.class), u.getId()));
     }
 
     @Transactional

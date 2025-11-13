@@ -35,6 +35,20 @@ services:
     ports:
       - "${API_PORT:-8080}:8080"
 
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: nexus-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@nexus.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-postgres123}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
 volumes:
   pgdata:
   m2cache:
+  pgadmin-data:

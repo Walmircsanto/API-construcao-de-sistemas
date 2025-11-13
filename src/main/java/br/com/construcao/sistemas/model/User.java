@@ -60,4 +60,5 @@ public class User extends BaseEntity{
     private Integer failedLogins = 0;
     private Instant lastFailureAt;
     private Instant lastLoginAt;
+    private Instant lastPasswordChangeAt;
 }

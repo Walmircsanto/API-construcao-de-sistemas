@@ -41,20 +41,22 @@ public class EmergencyContactController {
         return ResponseEntity.ok(service.list(pageable));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<EmergencyContactResponse> update(@PathVariable Long id, @RequestBody UpdateEmergencyContactRequest req) {
-        return ResponseEntity.ok(service.update(id, req));
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<EmergencyContactResponse> update(
+            @PathVariable Long id,
+            @RequestPart("data") UpdateEmergencyContactRequest req,
+            @RequestPart(value = "file", required = false) MultipartFile file
+    ) throws IOException {
+        return ResponseEntity.ok(service.update(id, req, file));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping(path = "/{id}/images", consumes = {"multipart/form-data"})
-    public ResponseEntity<ImageResponse> addImage(@PathVariable Long id, @RequestPart("file") MultipartFile file) throws IOException {
-        return ResponseEntity.ok(service.addImage(id, file));
     }
 
     @GetMapping("/{id}/images")

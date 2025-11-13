@@ -34,7 +34,9 @@ public class EmergencyContactService {
     private final UploadFiles uploadFiles;
 
     @Transactional
-    public EmergencyContactResponse create(CreateEmergencyContactRequest req, @Nullable MultipartFile file) throws IOException {
+    public EmergencyContactResponse create(CreateEmergencyContactRequest req,
+                                           @Nullable MultipartFile file) throws IOException {
+
         if (req.getPhone() != null && emergencyContactRepository.existsByPhone(req.getPhone())) {
             throw new BadRequestException("Telefone já cadastrado");
         }
@@ -43,6 +45,7 @@ public class EmergencyContactService {
         ec = emergencyContactRepository.save(ec);
 
         if (file != null && !file.isEmpty()) {
+            imageRepository.deleteByOwnerTypeAndEmergencyContactId(OwnerType.EMERGENCY_CONTACT, ec.getId());
             salvarImagemDoEmergencyContact(ec, file);
         }
 
@@ -63,20 +66,35 @@ public class EmergencyContactService {
     }
 
     @Transactional
-    public EmergencyContactResponse update(Long id, UpdateEmergencyContactRequest req) {
+    public EmergencyContactResponse update(Long id,
+                                           UpdateEmergencyContactRequest req,
+                                           @Nullable MultipartFile file) throws IOException {
+
         EmergencyContact ec = emergencyContactRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Contato de emergência não encontrado"));
 
-        if (req.getName() != null) ec.setName(req.getName());
+        if (req.getName() != null) {
+            ec.setName(req.getName());
+        }
+
         if (req.getPhone() != null && !req.getPhone().equals(ec.getPhone())) {
             if (emergencyContactRepository.existsByPhone(req.getPhone())) {
                 throw new BadRequestException("Telefone já cadastrado");
             }
             ec.setPhone(req.getPhone());
         }
-        if (req.getServiceType() != null) ec.setServiceType(req.getServiceType());
+
+        if (req.getServiceType() != null) {
+            ec.setServiceType(req.getServiceType());
+        }
 
         ec = emergencyContactRepository.save(ec);
+
+        if (file != null && !file.isEmpty()) {
+            imageRepository.deleteByOwnerTypeAndEmergencyContactId(OwnerType.EMERGENCY_CONTACT, ec.getId());
+            salvarImagemDoEmergencyContact(ec, file);
+        }
+
         return montarResponseComImagens(ec);
     }
 
@@ -86,33 +104,30 @@ public class EmergencyContactService {
                 .orElseThrow(() -> new NotFoundException("Contato de emergência não encontrado"));
 
         imageRepository.deleteByOwnerTypeAndEmergencyContactId(OwnerType.EMERGENCY_CONTACT, id);
-
         emergencyContactRepository.delete(ec);
-    }
-
-
-    @Transactional
-    public ImageResponse addImage(Long emergencyContactId, MultipartFile file) throws IOException {
-        EmergencyContact ec = emergencyContactRepository.findById(emergencyContactId)
-                .orElseThrow(() -> new NotFoundException("Contato de emergência não encontrado"));
-        Image img = salvarImagemDoEmergencyContact(ec, file);
-        return mapper.mapTo(img, ImageResponse.class);
     }
 
     @Transactional(readOnly = true)
     public List<ImageResponse> listImages(Long emergencyContactId) {
-        if (!emergencyContactRepository.existsById(emergencyContactId))
+        if (!emergencyContactRepository.existsById(emergencyContactId)) {
             throw new NotFoundException("Contato de emergência não encontrado");
+        }
+
         return imageRepository.findByOwnerTypeAndEmergencyContactId(OwnerType.EMERGENCY_CONTACT, emergencyContactId)
-                .stream().map(i -> mapper.mapTo(i, ImageResponse.class))
+                .stream()
+                .map(i -> mapper.mapTo(i, ImageResponse.class))
                 .toList();
     }
 
-    private Image salvarImagemDoEmergencyContact(EmergencyContact ec, MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) throw new BadRequestException("Arquivo de imagem ausente");
+    private void salvarImagemDoEmergencyContact(EmergencyContact ec, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("Arquivo de imagem ausente");
+        }
 
         String url = uploadFiles.putObject(file);
-        if (url == null) throw new InternalServerErrorException("Falha ao salvar no bucket");
+        if (url == null) {
+            throw new InternalServerErrorException("Falha ao salvar no bucket");
+        }
 
         Image img = Image.builder()
                 .ownerType(OwnerType.EMERGENCY_CONTACT)
@@ -122,13 +137,17 @@ public class EmergencyContactService {
                 .sizeBytes(file.getSize())
                 .build();
 
-        return imageRepository.save(img);
+        imageRepository.save(img);
     }
 
     private EmergencyContactResponse montarResponseComImagens(EmergencyContact ec) {
         EmergencyContactResponse resp = mapper.mapTo(ec, EmergencyContactResponse.class);
-        List<Image> imgs = imageRepository.findByOwnerTypeAndEmergencyContactId(OwnerType.EMERGENCY_CONTACT, ec.getId());
-        resp.setImages(imgs.stream().map(i -> mapper.mapTo(i, ImageResponse.class)).toList());
+        List<Image> imgs = imageRepository.findByOwnerTypeAndEmergencyContactId(
+                OwnerType.EMERGENCY_CONTACT, ec.getId()
+        );
+        resp.setImages(imgs.stream()
+                .map(i -> mapper.mapTo(i, ImageResponse.class))
+                .toList());
         return resp;
     }
 }

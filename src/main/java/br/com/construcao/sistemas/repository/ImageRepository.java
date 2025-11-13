@@ -17,5 +17,6 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
 
     void deleteByOwnerTypeAndEmergencyContactId(OwnerType ownerType, Long emergencyContactId);
 
+    Image findByEmergencyContactId(Long emergencyContactId);
 
 }

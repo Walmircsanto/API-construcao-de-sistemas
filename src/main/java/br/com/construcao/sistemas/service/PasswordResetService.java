@@ -49,7 +49,7 @@ public class PasswordResetService {
             prt.setRequestedIp(ip);
             tokenRepo.save(prt);
 
-            String link = buildResetLink(raw); // ex: https://app.seusistema.com/reset-password?token=RAW
+            String link = buildResetLink(raw);
             emailService.sendPasswordReset(u.getEmail(), u.getName(), link, prt.getExpiresAt());
         }
 

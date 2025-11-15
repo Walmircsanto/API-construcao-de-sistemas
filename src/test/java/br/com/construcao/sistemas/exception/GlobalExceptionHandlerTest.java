@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class GlobalExceptionHandlerTest {
@@ -23,7 +25,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ExceptionResponse> response = handler.handleUnauthorized(ex);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals("Unauthorized error", response.getBody().getMessage());
+        assertEquals("Unauthorized error", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals("Unauthorized", response.getBody().getDetails());
         assertNotNull(response.getBody().getTimestamp());
     }
@@ -34,7 +36,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ExceptionResponse> response = handler.handleInternalServerError(ex);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("Server failure", response.getBody().getMessage());
+        assertEquals("Server failure", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals("Internal server error", response.getBody().getDetails());
     }
 
@@ -44,7 +46,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ExceptionResponse> response = handler.handleConflict(ex);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("Conflict happened", response.getBody().getMessage());
+        assertEquals("Conflict happened", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals("Conflict", response.getBody().getDetails());
     }
 
@@ -54,7 +56,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ExceptionResponse> response = handler.handleDataBaseException(ex);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("DB crash", response.getBody().getMessage());
+        assertEquals("DB crash", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals("Database error", response.getBody().getDetails());
     }
 
@@ -83,7 +85,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ExceptionResponse> response = handler.handleTokenExpiredException(ex);
 
         assertEquals(HttpStatus.GONE, response.getStatusCode());
-        assertEquals("Token expired.", response.getBody().getMessage());
+        assertEquals("Token expired.", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals("Expired token", response.getBody().getDetails());
     }
 

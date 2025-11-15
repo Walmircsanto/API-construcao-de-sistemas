@@ -12,7 +12,7 @@ class InternalServerErrorExceptionTest {
 
         assertEquals(errorMessage, exception.getMessage());
         assertNull(exception.getCause());
-        assertTrue(exception instanceof RuntimeException);
+        assertInstanceOf(RuntimeException.class, exception);
     }
 
     @Test
@@ -24,6 +24,6 @@ class InternalServerErrorExceptionTest {
 
         assertEquals(errorMessage, exception.getMessage());
         assertEquals(cause, exception.getCause());
-        assertTrue(exception instanceof RuntimeException);
+        assertInstanceOf(RuntimeException.class, exception);
     }
 }

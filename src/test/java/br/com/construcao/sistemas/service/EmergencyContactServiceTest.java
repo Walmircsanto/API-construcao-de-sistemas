@@ -132,7 +132,7 @@ class EmergencyContactServiceTest {
         when(mapper.mapTo(req, EmergencyContact.class)).thenReturn(ec);
         when(emergencyContactRepository.save(ec)).thenReturn(ec);
         when(file.isEmpty()).thenReturn(false);
-        when(uploadFiles.putObject(file)).thenReturn(null); // simula erro
+        when(uploadFiles.putObject(file)).thenReturn(null);
 
         assertThrows(InternalServerErrorException.class,
                 () -> service.create(req, file));

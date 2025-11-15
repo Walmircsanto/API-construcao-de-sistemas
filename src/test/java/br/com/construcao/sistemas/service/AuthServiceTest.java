@@ -64,7 +64,6 @@ class AuthServiceTest {
         req.setPassword("123");
     }
 
-    // --------------------------------------------------------------------------------------
     @Test
     void testUserNotFound() {
         when(users.findByEmail(anyString())).thenReturn(Optional.empty());
@@ -73,7 +72,6 @@ class AuthServiceTest {
                 () -> service.loginLocal(req, "127.0.0.1"));
     }
 
-    // --------------------------------------------------------------------------------------
     @Test
     void testUserDisabled() {
         user.setEnabled(false);
@@ -83,7 +81,6 @@ class AuthServiceTest {
                 () -> service.loginLocal(req, "127.0.0.1"));
     }
 
-    // --------------------------------------------------------------------------------------
     @Test
     void testUserBlocked() {
         user.setLocked(true);
@@ -94,7 +91,6 @@ class AuthServiceTest {
                 () -> service.loginLocal(req, "127.0.0.1"));
     }
 
-    // --------------------------------------------------------------------------------------
     @Test
     void testInvalidPasswordIncrementsFailCounter() {
         when(users.findByEmail(anyString())).thenReturn(Optional.of(user));
@@ -107,10 +103,9 @@ class AuthServiceTest {
         assertNotNull(user.getLastFailureAt());
     }
 
-    // --------------------------------------------------------------------------------------
     @Test
     void testAccountGetsBlockedAfterMaxFails() {
-        user.setFailedLogins(4); // MAX_FAILS = 5
+        user.setFailedLogins(4);
 
         when(users.findByEmail(anyString())).thenReturn(Optional.of(user));
         when(encoder.matches(anyString(), anyString())).thenReturn(false);
@@ -122,7 +117,6 @@ class AuthServiceTest {
         assertEquals(EnumStatus.BLOQUEADO, user.getStatus());
     }
 
-    // --------------------------------------------------------------------------------------
     @Test
     void testSuccessfulLogin() {
         when(users.findByEmail(anyString())).thenReturn(Optional.of(user));
@@ -143,7 +137,6 @@ class AuthServiceTest {
         assertFalse(res.isMustChangePassword());
     }
 
-    // --------------------------------------------------------------------------------------
     @Test
     void testLoginUpdatesFcmToken() {
         req.setFcmToken("token123");
@@ -163,7 +156,6 @@ class AuthServiceTest {
         assertNotNull(user.getFcmTokenUpdatedAt());
     }
 
-    // --------------------------------------------------------------------------------------
     @Test
     void testMustChangePasswordWhenExpired() {
         user.setProvisionalPassword(true);

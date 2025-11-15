@@ -46,12 +46,10 @@ class JwtAuthFilterTest {
     void testDeveAutenticarUsuarioQuandoTokenValido() throws Exception {
         when(request.getHeader("Authorization")).thenReturn("Bearer token-valido");
 
-        // Simular Claims retornando id do usuário
         Claims claims = mock(Claims.class);
         when(claims.getSubject()).thenReturn("1");
         when(jwtService.parse("token-valido")).thenReturn(claims);
 
-        // Simular usuário encontrado
         User user = new User();
         user.setId(1L);
         user.setEmail("usuario@test.com");
@@ -60,13 +58,11 @@ class JwtAuthFilterTest {
 
         filter.doFilterInternal(request, response, chain);
 
-        // Verificar autenticação configurada corretamente
         var auth = SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(auth);
         assertEquals("usuario@test.com", auth.getPrincipal());
         assertEquals(List.of(new SimpleGrantedAuthority("ROLE_ADMIN")), auth.getAuthorities());
 
-        // Verificar se o chain continuou
         verify(chain).doFilter(request, response);
     }
 
@@ -77,7 +73,6 @@ class JwtAuthFilterTest {
 
         filter.doFilterInternal(request, response, chain);
 
-        // Nenhuma autenticação deve ser configurada
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         verify(chain).doFilter(request, response);
     }

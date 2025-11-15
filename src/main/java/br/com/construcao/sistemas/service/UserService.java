@@ -87,8 +87,8 @@ public class UserService {
         return enrichWithProfileImage(mapper.mapTo(user, UserResponse.class), id);
     }
 
-    public Page<UserResponse> list(Pageable pageable){
-        return repo.findAll(pageable)
+    public Page<UserResponse> listAllByRole(Role role, Pageable pageable){
+        return repo.findAllByRole(role, pageable)
                 .map(u -> enrichWithProfileImage(mapper.mapTo(u, UserResponse.class), u.getId()));
     }
 
@@ -134,19 +134,30 @@ public class UserService {
     }
 
     @Transactional
-    public void updatePassword(Long id, UpdatePasswordRequest req){
-        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+    public void updatePassword(Long id, UpdatePasswordRequest req) {
+        User user = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
-        if (req.getCurrentPassword() != null && !encoder.matches(req.getCurrentPassword(), user.getPassword())) {
+        if (!encoder.matches(req.getCurrentPassword(), user.getPassword())) {
             throw new UnauthorizedException("Senha atual inválida");
         }
-        if (req.getNewPassword() == null || req.getNewPassword().length() < 6) {
-            throw new BadRequestException("Senha deve ter pelo menos 6 caracteres");
+
+        if (!req.getNewPassword().equals(req.getConfirmNewPassword())) {
+            throw new BadRequestException("Confirmação de senha não confere");
+        }
+
+        if (encoder.matches(req.getNewPassword(), user.getPassword())) {
+            throw new BadRequestException("Nova senha deve ser diferente da atual");
         }
 
         user.setPassword(encoder.encode(req.getNewPassword()));
+        user.setProvisionalPassword(false);
+        user.setProvisionalPasswordExpiresAt(null);
+        user.setLastPasswordChangeAt(Instant.now());
+
         repo.save(user);
     }
+
 
     public void delete(Long id){
         if (!repo.existsById(id)) throw new NotFoundException("Usuário não encontrado");

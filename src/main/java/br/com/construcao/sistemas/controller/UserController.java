@@ -4,6 +4,7 @@ import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordReq
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
+import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -42,8 +43,9 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<UserResponse>> list(Pageable pageable) {
-        return ResponseEntity.ok(service.list(pageable));
+    public ResponseEntity<Page<UserResponse>> listAllByRole(@RequestParam(required = false) Role role,
+                                                            Pageable pageable) {
+        return ResponseEntity.ok(service.listAllByRole(role, pageable));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,

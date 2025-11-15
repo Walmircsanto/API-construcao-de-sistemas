@@ -10,7 +10,7 @@ class ConflictExceptionTest {
 
 
     @Test
-    void deveCriarExceptionComMensagem() {
+    void testCriarExceptionComMensagem() {
         ConflictException ex = new ConflictException("Erro de conflito");
 
         assertEquals("Erro de conflito", ex.getMessage());
@@ -18,7 +18,7 @@ class ConflictExceptionTest {
     }
 
     @Test
-    void deveCriarExceptionComMensagemECausa() {
+    void testCriarExceptionComMensagemECausa() {
         Throwable cause = new RuntimeException("Causa original");
         ConflictException ex = new ConflictException("Erro de conflito", cause);
 
@@ -27,7 +27,7 @@ class ConflictExceptionTest {
     }
 
     @Test
-    void deveTerStatusHttpConflict() {
+    void testTerStatusHttpConflict() {
         ResponseStatus status = ConflictException.class.getAnnotation(ResponseStatus.class);
 
         assertNotNull(status);

@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ExceptionResponseTest {
 
     @Test
-    void deveCriarExceptionResponseComValoresCorretos() {
+    void testCriarExceptionResponseComValoresCorretos() {
         Date now = new Date();
         String message = "Erro ocorrido";
         String details = "Detalhes do erro";
@@ -22,7 +22,7 @@ class ExceptionResponseTest {
     }
 
     @Test
-    void gettersNaoDevemSerNulosQuandoValoresForemPassados() {
+    void testgettersNaoDevemSerNulosQuandoValoresForemPassados() {
         ExceptionResponse response = new ExceptionResponse(new Date(), "msg", "detalhes");
 
         assertNotNull(response.getTimestamp());

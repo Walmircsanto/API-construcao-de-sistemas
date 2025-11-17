@@ -1,5 +1,6 @@
 package br.com.construcao.sistemas.controller.dto.request.user;
 
+import br.com.construcao.sistemas.model.enums.AuthProvider;
 import br.com.construcao.sistemas.model.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -28,4 +29,8 @@ public class CreateUserRequest {
     private String imgProfile;
 
     private Role role;
+
+    private Boolean provisionalPassword;
+
+    private AuthProvider authProvider;
 }

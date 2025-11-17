@@ -21,14 +21,14 @@ import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
 import br.com.construcao.sistemas.util.helpers.PasswordGenerator;
-import com.google.api.gax.paging.Page;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;

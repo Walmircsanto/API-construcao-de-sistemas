@@ -28,9 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -44,24 +44,40 @@ public class UserService {
     private final EmailService emailService;
     private final MyModelMapper mapper;
 
-    public UserService(UserRepository userRepository, PasswordEncoder encoder, MyModelMapper mapper) {
-        this.repo = userRepository;
-        this.encoder = encoder;
-        this.mapper = mapper;
-    }
 
     @Transactional
-    public UserResponse create(CreateUserRequest req){
+    public UserResponse create(CreateUserRequest req, @Nullable MultipartFile file) throws IOException {
         String email = req.getEmail().trim().toLowerCase();
         if (repo.existsByEmail(email)) throw new ConflictException("E-mail já cadastrado");
 
         User user = mapper.mapTo(req, User.class);
         user.setEmail(email);
-        user.setPassword(encoder.encode(req.getPassword()));
+
+        boolean mustGenerateProvisional = (req.getPassword() == null || req.getPassword().isBlank());
+        boolean markProvisional = Boolean.TRUE.equals(req.getProvisionalPassword()) || mustGenerateProvisional;
+
+        String rawPassword = mustGenerateProvisional ? generator.generate(10) : req.getPassword();
+        user.setPassword(encoder.encode(rawPassword));
+        user.setProvisionalPassword(markProvisional);
+        user.setProvisionalPasswordExpiresAt(markProvisional ? Instant.now().plus(Duration.ofDays(7)) : null);
+
         if (user.getRole() == null) user.setRole(Role.SECURITY);
         if (user.getProvider() == null) user.setProvider(AuthProvider.LOCAL);
 
-        return mapper.mapTo(repo.save(user), UserResponse.class);
+        user = repo.save(user);
+
+        if (file != null && !file.isEmpty()) {
+            imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
+            saveProfileImage(user, file);
+        }
+
+        if (markProvisional) {
+            emailService.sendProvisionalPassword(
+                    user.getEmail(), user.getName(), rawPassword, user.getProvisionalPasswordExpiresAt()
+            );
+        }
+
+        return enrichWithProfileImage(mapper.mapTo(user, UserResponse.class), user.getId());
     }
 
     public UserResponse get(Long id){
@@ -75,9 +91,8 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse update(Long id, UpdateUserRequest req){
-        User user = repo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+    public UserResponse update(Long id, UpdateUserRequest req, @Nullable MultipartFile file) throws IOException {
+        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
         if (req.getName() != null) user.setName(req.getName());
 
@@ -93,8 +108,29 @@ public class UserService {
         if (req.getEnabled() != null) user.setEnabled(req.getEnabled());
         if (req.getLocked() != null) user.setLocked(req.getLocked());
 
-        return mapper.mapTo(repo.save(user), UserResponse.class);
+        user = repo.save(user);
+
+        if (file != null && !file.isEmpty()) {
+            imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
+            String url = uploadFiles.putObject(file);
+            if (url == null) throw new InternalServerErrorException("Falha ao salvar no bucket");
+
+            Image img = Image.builder()
+                    .user(user)
+                    .ownerType(OwnerType.USER)
+                    .url(url)
+                    .contentType(file.getContentType())
+                    .sizeBytes(file.getSize())
+                    .build();
+            imageRepo.save(img);
+        }
+
+        UserResponse resp = mapper.mapTo(user, UserResponse.class);
+        imageRepo.findFirstByUser_IdAndOwnerType(user.getId(), OwnerType.USER)
+                .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
+        return resp;
     }
+
 
     @Transactional
     public void updatePassword(Long id, UpdatePasswordRequest req){
@@ -167,6 +203,25 @@ public class UserService {
         imageRepo.findFirstByUser_IdAndOwnerType(userId, OwnerType.USER)
                 .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
         return resp;
+    }
+
+    public boolean userExistByEmail(String email) {
+     return this.repo.existsByEmail(email);
+    }
+
+    @Transactional
+    public UserResponse createdUserByGmail(CreateUserRequest userRequest){
+        User user = mapper.mapTo(userRequest, User.class);
+        
+        // Gera senha temporária para usuários OAuth2
+        String tempPassword = generator.generate(12);
+        user.setPassword(encoder.encode(tempPassword));
+        user.setProvisionalPassword(true);
+        user.setProvisionalPasswordExpiresAt(Instant.now().plus(Duration.ofDays(30)));
+        
+        user = repo.save(user);
+        
+        return mapper.mapTo(user, UserResponse.class);
     }
 }
 

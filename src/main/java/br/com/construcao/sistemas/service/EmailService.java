@@ -53,5 +53,29 @@ public class EmailService {
 
         mailSender.send(msg);
     }
+
+    public void sendPasswordReset(String to, String name, String link, Instant expiresAt) {
+        String exp = expiresAt != null
+                ? DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                .withZone(ZoneId.systemDefault())
+                .format(expiresAt)
+                : null;
+
+        StringBuilder body = new StringBuilder()
+                .append("Olá, ").append(name).append("!\n\n")
+                .append("Recebemos uma solicitação para redefinir sua senha.\n")
+                .append("Para continuar, acesse o link abaixo:\n")
+                .append(link).append("\n\n");
+        if (exp != null) body.append("Este link expira em: ").append(exp).append("\n\n");
+        body.append("Se você não solicitou, ignore este e-mail.");
+
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(from);
+        msg.setTo(to);
+        msg.setSubject("Redefinição de senha");
+        msg.setText(body.toString());
+        mailSender.send(msg);
+    }
+
 }
 

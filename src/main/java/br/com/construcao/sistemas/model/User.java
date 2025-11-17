@@ -34,7 +34,7 @@ public class User extends BaseEntity{
 
     @Column(nullable=false)
     @Builder.Default
-    private boolean provisionalPassword = false;   // <<< NOVO
+    private boolean provisionalPassword = false;
 
     private Instant provisionalPasswordExpiresAt;
 
@@ -63,4 +63,5 @@ public class User extends BaseEntity{
     private Integer failedLogins = 0;
     private Instant lastFailureAt;
     private Instant lastLoginAt;
+    private Instant lastPasswordChangeAt;
 }

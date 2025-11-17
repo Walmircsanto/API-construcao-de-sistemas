@@ -13,6 +13,10 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
     List<Image> findByOwnerTypeAndEmergencyContactId(OwnerType ownerType, Long emergencyId);
 
     Optional<Image> findFirstByUser_IdAndOwnerType(Long userId, OwnerType ownerType);
-    void deleteByUser_IdAndOwnerType(Long userId, OwnerType kind);
+    void deleteByUser_IdAndOwnerType(Long userId, OwnerType ownerType);
+
+    void deleteByOwnerTypeAndEmergencyContactId(OwnerType ownerType, Long emergencyContactId);
+
+    Image findByEmergencyContactId(Long emergencyContactId);
 
 }

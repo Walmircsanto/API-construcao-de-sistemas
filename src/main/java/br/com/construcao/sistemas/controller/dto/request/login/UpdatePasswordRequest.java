@@ -1,5 +1,7 @@
 package br.com.construcao.sistemas.controller.dto.request.login;
 
+import br.com.construcao.sistemas.util.annotations.ValidPassword;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,8 +14,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UpdatePasswordRequest {
 
+    @NotBlank
     private String currentPassword;
 
-    @Size(min=6, max=15)
+    @ValidPassword
     private String newPassword;
+
+    @NotBlank
+    private String confirmNewPassword;
 }

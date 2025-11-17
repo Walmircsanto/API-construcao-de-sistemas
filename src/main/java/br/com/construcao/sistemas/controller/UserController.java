@@ -4,8 +4,11 @@ import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordReq
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
+import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,8 +43,9 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> list() {
-        return ResponseEntity.ok(service.list());
+    public ResponseEntity<Page<UserResponse>> listAllByRole(@RequestParam(required = false) Role role,
+                                                            Pageable pageable) {
+        return ResponseEntity.ok(service.listAllByRole(role, pageable));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,

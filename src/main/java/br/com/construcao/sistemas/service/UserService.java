@@ -5,6 +5,7 @@ import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
+import br.com.construcao.sistemas.controller.dto.response.emergency.EmergencyContactResponse;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
 import br.com.construcao.sistemas.controller.exceptions.BadRequestException;
@@ -20,6 +21,7 @@ import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
 import br.com.construcao.sistemas.util.helpers.PasswordGenerator;
+import com.google.api.gax.paging.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,9 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +45,6 @@ public class UserService {
     private final PasswordGenerator generator;
     private final EmailService emailService;
     private final MyModelMapper mapper;
-
 
     @Transactional
     public UserResponse create(CreateUserRequest req, @Nullable MultipartFile file) throws IOException {
@@ -86,8 +87,9 @@ public class UserService {
         return mapper.mapTo(user, UserResponse.class);
     }
 
-    public List<UserResponse> list(){
-        return mapper.toList(repo.findAll(), UserResponse.class);
+    public Page<UserResponse> listAllByRole(Role role, Pageable pageable){
+        return repo.findAllByRole(role, pageable)
+                .map(u -> enrichWithProfileImage(mapper.mapTo(u, UserResponse.class), u.getId()));
     }
 
     @Transactional
@@ -131,25 +133,24 @@ public class UserService {
         return resp;
     }
 
-
     @Transactional
     public void updatePassword(Long id, UpdatePasswordRequest req){
-        User user = repo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
-        if (req.getCurrentPassword() != null &&
-                !encoder.matches(req.getCurrentPassword(), user.getPassword())) {
+        if (req.getCurrentPassword() != null && !encoder.matches(req.getCurrentPassword(), user.getPassword())) {
             throw new UnauthorizedException("Senha atual inválida");
         }
-
-        if (req.getNewPassword() == null || req.getNewPassword().length() < 8) {
-            throw new BadRequestException("Senha deve ter pelo menos 8 caracteres");
+        if (req.getNewPassword() == null || req.getNewPassword().length() < 6) {
+            throw new BadRequestException("Senha deve ter pelo menos 6 caracteres");
         }
 
         user.setPassword(encoder.encode(req.getNewPassword()));
+        user.setProvisionalPassword(false);
+        user.setProvisionalPasswordExpiresAt(null);
+        user.setLastPasswordChangeAt(Instant.now());
+
         repo.save(user);
     }
-
 
     public void delete(Long id){
         if (!repo.existsById(id)) throw new NotFoundException("Usuário não encontrado");
@@ -212,15 +213,15 @@ public class UserService {
     @Transactional
     public UserResponse createdUserByGmail(CreateUserRequest userRequest){
         User user = mapper.mapTo(userRequest, User.class);
-        
+
         // Gera senha temporária para usuários OAuth2
         String tempPassword = generator.generate(12);
         user.setPassword(encoder.encode(tempPassword));
         user.setProvisionalPassword(true);
         user.setProvisionalPasswordExpiresAt(Instant.now().plus(Duration.ofDays(30)));
-        
+
         user = repo.save(user);
-        
+
         return mapper.mapTo(user, UserResponse.class);
     }
 }

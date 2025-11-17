@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/nexus/user/**").permitAll()
                         .requestMatchers("/api/nexus/emergency-contacts/**").permitAll()
                         .requestMatchers("/api/nexus/admin/notifications/**").permitAll()
+                        .requestMatchers("/api/nexus/faces/**").permitAll()
                         .requestMatchers("/api/nexus/suspects/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()

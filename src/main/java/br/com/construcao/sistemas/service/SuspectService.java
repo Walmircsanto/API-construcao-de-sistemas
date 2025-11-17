@@ -9,6 +9,7 @@ import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectRespons
 import br.com.construcao.sistemas.controller.exceptions.ConflictException;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
+import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.enums.OwnerType;
@@ -34,6 +35,7 @@ public class SuspectService {
     private final ImageRepository imageRepository;
     private final MyModelMapper mapper;
     private final UploadFiles uploadFiles;
+    private final PythonFaceService pythonFaceService;
 
     @Transactional
     public SuspectResponse create(CreateSuspectRequest req, @Nullable MultipartFile file) throws IOException {
@@ -42,8 +44,19 @@ public class SuspectService {
         Suspect s = mapper.mapTo(req, Suspect.class);
         s = suspectRepository.save(s);
 
+        Image perfil = null;
+
         if (file != null && !file.isEmpty()) {
-            salvarImagemDoSuspect(s, file);
+            perfil = salvarImagemDoSuspect(s, file);
+
+            try {
+                pythonFaceService.registrarFaceSuspeito(s.getId(), perfil.getUrl());
+            } catch (Exception e) {
+                throw new InternalServerErrorException(
+                        "Falha ao registrar face no serviço Python: " + e.getMessage(),
+                        e
+                );
+            }
         }
 
         return montarResponseComImagens(s);

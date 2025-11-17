@@ -4,6 +4,7 @@ import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordReq
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
+import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -63,13 +64,13 @@ class UserControllerTest {
     @Test
     void testList() {
         Page<UserResponse> page = new PageImpl<>(List.of(new UserResponse()));
-        when(service.list(PageRequest.of(0, 20))).thenReturn(page);
+        when(service.listAllByRole(Role.ADMIN, PageRequest.of(0, 20))).thenReturn(page);
 
-        ResponseEntity<Page<UserResponse>> response = controller.list(PageRequest.of(0, 20));
+        ResponseEntity<Page<UserResponse>> response = controller.listAllByRole(Role.ADMIN, PageRequest.of(0, 20));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(page, response.getBody());
-        verify(service, times(1)).list(PageRequest.of(0, 20));
+        verify(service, times(1)).listAllByRole(Role.ADMIN, PageRequest.of(0, 20));
     }
 
     @Test

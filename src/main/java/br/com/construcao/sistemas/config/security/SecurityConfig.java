@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/nexus/auth/**").permitAll()
                         .requestMatchers("/api/auth/google/**").permitAll()
                         .requestMatchers("/api/nexus/user/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/nexus/suspects/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

@@ -4,6 +4,7 @@ import br.com.construcao.sistemas.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -12,7 +13,12 @@ import java.util.Date;
 
 @Component
 public class JwtService {
-    private final String secret = "troque-por-uma-chave-grande-e-secreta";
+
+    private final String secret ;
+
+    public JwtService(@Value("${jwt.token}") String secret) {
+        this.secret = secret;
+    }
 
     public String generateAccess(User user) {
         Instant now = Instant.now();

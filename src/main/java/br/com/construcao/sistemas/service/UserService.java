@@ -5,12 +5,11 @@ import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
-import br.com.construcao.sistemas.controller.dto.response.emergency.EmergencyContactResponse;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
 import br.com.construcao.sistemas.controller.exceptions.BadRequestException;
-import br.com.construcao.sistemas.controller.exceptions.ConflictException;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
+import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.exception.UnauthorizedException;
 import br.com.construcao.sistemas.model.Image;
@@ -32,7 +31,6 @@ import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

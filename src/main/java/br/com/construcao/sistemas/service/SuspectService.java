@@ -6,8 +6,8 @@ import br.com.construcao.sistemas.controller.dto.request.suspect.CreateSuspectRe
 import br.com.construcao.sistemas.controller.dto.request.suspect.UpdateSuspectRequest;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
-import br.com.construcao.sistemas.controller.exceptions.ConflictException;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
+import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;

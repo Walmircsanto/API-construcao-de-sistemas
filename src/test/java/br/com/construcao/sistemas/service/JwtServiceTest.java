@@ -19,7 +19,7 @@ class JwtServiceTest {
 
     @BeforeEach
     void setup() {
-        jwtService = new JwtService();
+        jwtService = new JwtService("troque-por-uma-chave-grande-e-secreta");
 
         dummyUser = new User();
         dummyUser.setId(1L);

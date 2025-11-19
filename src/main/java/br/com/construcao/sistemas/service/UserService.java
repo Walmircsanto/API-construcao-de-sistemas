@@ -5,12 +5,11 @@ import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
-import br.com.construcao.sistemas.controller.dto.response.emergency.EmergencyContactResponse;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
 import br.com.construcao.sistemas.controller.exceptions.BadRequestException;
-import br.com.construcao.sistemas.controller.exceptions.ConflictException;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
+import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.exception.UnauthorizedException;
 import br.com.construcao.sistemas.model.Image;
@@ -23,17 +22,15 @@ import br.com.construcao.sistemas.repository.UserRepository;
 import br.com.construcao.sistemas.util.helpers.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -83,8 +80,9 @@ public class UserService {
     }
 
     public UserResponse get(Long id){
-        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
-        return enrichWithProfileImage(mapper.mapTo(user, UserResponse.class), id);
+        User user = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        return mapper.mapTo(user, UserResponse.class);
     }
 
     public Page<UserResponse> listAllByRole(Role role, Pageable pageable){
@@ -134,20 +132,14 @@ public class UserService {
     }
 
     @Transactional
-    public void updatePassword(Long id, UpdatePasswordRequest req) {
-        User user = repo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+    public void updatePassword(Long id, UpdatePasswordRequest req){
+        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
-        if (!encoder.matches(req.getCurrentPassword(), user.getPassword())) {
+        if (req.getCurrentPassword() != null && !encoder.matches(req.getCurrentPassword(), user.getPassword())) {
             throw new UnauthorizedException("Senha atual inválida");
         }
-
-        if (!req.getNewPassword().equals(req.getConfirmNewPassword())) {
-            throw new BadRequestException("Confirmação de senha não confere");
-        }
-
-        if (encoder.matches(req.getNewPassword(), user.getPassword())) {
-            throw new BadRequestException("Nova senha deve ser diferente da atual");
+        if (req.getNewPassword() == null || req.getNewPassword().length() < 6) {
+            throw new BadRequestException("Senha deve ter pelo menos 6 caracteres");
         }
 
         user.setPassword(encoder.encode(req.getNewPassword()));
@@ -157,7 +149,6 @@ public class UserService {
 
         repo.save(user);
     }
-
 
     public void delete(Long id){
         if (!repo.existsById(id)) throw new NotFoundException("Usuário não encontrado");
@@ -211,6 +202,25 @@ public class UserService {
         imageRepo.findFirstByUser_IdAndOwnerType(userId, OwnerType.USER)
                 .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
         return resp;
+    }
+
+    public boolean userExistByEmail(String email) {
+     return this.repo.existsByEmail(email);
+    }
+
+    @Transactional
+    public UserResponse createdUserByGmail(CreateUserRequest userRequest){
+        User user = mapper.mapTo(userRequest, User.class);
+
+        // Gera senha temporária para usuários OAuth2
+        String tempPassword = generator.generate(12);
+        user.setPassword(encoder.encode(tempPassword));
+        user.setProvisionalPassword(true);
+        user.setProvisionalPasswordExpiresAt(Instant.now().plus(Duration.ofDays(30)));
+
+        user = repo.save(user);
+
+        return mapper.mapTo(user, UserResponse.class);
     }
 }
 

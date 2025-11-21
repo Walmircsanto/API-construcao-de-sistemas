@@ -3,6 +3,7 @@ package br.com.construcao.sistemas.integration.service;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.integration.dto.FaceRegisterRequest;
 import br.com.construcao.sistemas.integration.dto.FaceRegisterResponse;
+import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class PythonFaceService {
         );
 
         try {
+            System.out.println(baseUrl + " A base url e essa ai ");
             restTemplate.postForEntity(
                     baseUrl + "/faces/register",
                     body,
@@ -85,5 +89,64 @@ public class PythonFaceService {
         String key = withoutProtocol.substring(firstSlash + 1); // "João Gabriel.png_1763379626900"
 
         return "s3://" + bucket + "/" + key;
+    }
+
+
+
+    public FaceSearchResponse buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("image", new ByteArrayResource(image.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return image.getOriginalFilename();
+                }
+            });
+            body.add("top_k", topK.toString());
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<FaceSearchResponse> response = restTemplate.postForEntity(
+                    baseUrl + "/faces/search",
+                    requestEntity,
+                    FaceSearchResponse.class
+            );
+
+            return response.getBody();
+        } catch (IOException e) {
+            throw new InternalServerErrorException(
+                    "Erro ao processar imagem: " + e.getMessage(),
+                    e
+            );
+        } catch (RestClientException e) {
+            throw new InternalServerErrorException(
+                    "Falha ao buscar suspeitos no serviço Python: " + e.getMessage(),
+                    e
+            );
+        }
+    }
+
+    public FaceSearchResponse buscarSuspeitosPorS3(String imageUrl, Integer topK) {
+        String s3Path = toS3Path(imageUrl);
+
+        FaceSearchRequest request = new FaceSearchRequest(topK, s3Path);
+
+        try {
+            ResponseEntity<FaceSearchResponse> response = restTemplate.postForEntity(
+                    baseUrl + "/faces/search",
+                    request,
+                    FaceSearchResponse.class
+            );
+
+            return response.getBody();
+        } catch (RestClientException e) {
+            throw new InternalServerErrorException(
+                    "Falha ao buscar suspeitos no serviço Python: " + e.getMessage(),
+                    e
+            );
+        }
     }
 }

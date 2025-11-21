@@ -9,6 +9,9 @@ import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectRespons
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
+import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
+import br.com.construcao.sistemas.integration.dto.FaceSearchRequestImage;
+import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
@@ -114,6 +117,22 @@ public class SuspectService {
                 .stream().map(i -> mapper.mapTo(i, ImageResponse.class))
                 .toList();
     }
+
+    @Transactional
+    public FaceSearchResponse buscarSuspeitosPorImagem(MultipartFile image, Integer topK){
+        if(image == null || image.isEmpty()){
+            throw new RuntimeException("image not found");
+        }
+       return this.pythonFaceService.buscarSuspeitosPorImagem(image,topK);
+
+    }
+
+    public FaceSearchResponse buscarSuspeitosPorS3(FaceSearchRequest request){
+        return this.pythonFaceService.buscarSuspeitosPorS3(request.getS3Path(),request.getTopK());
+
+    }
+
+
 
     private void validarCpfDuplicado(String cpf) {
         if (suspectRepository.existsByCpf(cpf)) {

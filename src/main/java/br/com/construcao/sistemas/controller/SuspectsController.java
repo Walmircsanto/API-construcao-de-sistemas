@@ -33,8 +33,8 @@ public class SuspectsController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SuspectResponse> create(
-            @Valid @RequestPart("data") CreateSuspectRequest req,
-            @RequestPart(name = "file", required = false) MultipartFile file
+            @Valid @RequestPart("metadata") CreateSuspectRequest req,
+            @RequestPart(name = "image", required = false) MultipartFile file
     ) throws IOException {
         SuspectResponse body = suspectService.create(req, file);
         return ResponseEntity.status(HttpStatus.CREATED).body(body);

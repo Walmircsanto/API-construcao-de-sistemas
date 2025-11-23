@@ -52,7 +52,7 @@ public class PythonFaceService {
         }
     }
 
-    public void registrarSuspeitoImagem(Long suspectId, MultipartFile image, CreateSuspectRequest metadata){
+    public void registrarSuspeitoImagem(Long suspectId, MultipartFile image, String s3Path){
 
         try {
 
@@ -61,7 +61,7 @@ public class PythonFaceService {
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("suspect_id", suspectId.toString());
-            body.add("metadata", new ObjectMapper().writeValueAsString(metadata));
+            body.add("s3_path", s3Path);
 
             // Arquivo: MultipartFile -> ByteArrayResource
             ByteArrayResource imageRequest = new ByteArrayResource(image.getBytes()) {

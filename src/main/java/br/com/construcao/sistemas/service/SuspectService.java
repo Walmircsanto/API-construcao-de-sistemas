@@ -48,44 +48,39 @@ public class SuspectService {
         suspectData = suspectRepository.save(suspectData);
 
         Image perfil = null;
-
+        perfil = salvarImagemDoSuspect(suspectData, file);
         if (file != null && !file.isEmpty()) {
-            //perfil = salvarImagemDoSuspect(suspectData, file);
+            //mudar o req para o caminho no bucket S3 gerado
+            pythonFaceService.registrarSuspeitoImagem(suspectData.getId(), file, perfil.getUrl());
 
+        } else {
 
-            try {
-                pythonFaceService.registrarSuspeitoImagem(suspectData.getId(),file, req);
-            } catch (Exception e) {
-                throw new InternalServerErrorException(
-                        "Falha ao registrar face no serviço Python: " + e.getMessage(),
-                        e
-                );
-            }
+            pythonFaceService.registrarFaceSuspeito(suspectData.getId(), perfil.getUrl(), req);
         }
 
         return montarResponseComImagens(suspectData);
     }
 
     @Transactional(readOnly = true)
-    public SuspectResponse get(Long id){
+    public SuspectResponse get(Long id) {
         Suspect s = suspectRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Suspeito não encontrado"));
         return montarResponseComImagens(s);
     }
 
     @Transactional(readOnly = true)
-    public Page<SuspectResponse> list(Pageable pageable){
+    public Page<SuspectResponse> list(Pageable pageable) {
         return suspectRepository.findAll(pageable)
                 .map(this::montarResponseComImagens);
     }
 
     @Transactional
-    public SuspectResponse update(Long id, UpdateSuspectRequest req){
+    public SuspectResponse update(Long id, UpdateSuspectRequest req) {
         Suspect s = suspectRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Suspeito não encontrado"));
 
         if (req.getName() != null) s.setName(req.getName());
-        if (req.getAge() != null)  s.setAge(req.getAge());
+        if (req.getAge() != null) s.setAge(req.getAge());
         if (req.getDescription() != null) s.setDescription(req.getDescription());
 
         if (req.getCpf() != null && !req.getCpf().equals(s.getCpf())) {
@@ -98,7 +93,7 @@ public class SuspectService {
     }
 
     @Transactional
-    public void delete(Long id){
+    public void delete(Long id) {
         if (!suspectRepository.existsById(id)) throw new NotFoundException("Suspeito não encontrado");
         suspectRepository.deleteById(id);
     }
@@ -112,7 +107,7 @@ public class SuspectService {
     }
 
     @Transactional(readOnly = true)
-    public List<ImageResponse> listImages(Long suspectId){
+    public List<ImageResponse> listImages(Long suspectId) {
         if (!suspectRepository.existsById(suspectId)) throw new NotFoundException("Suspeito não encontrado");
         return imageRepository.findByOwnerTypeAndSuspectId(OwnerType.SUSPECT, suspectId)
                 .stream().map(i -> mapper.mapTo(i, ImageResponse.class))
@@ -120,19 +115,18 @@ public class SuspectService {
     }
 
     @Transactional
-    public FaceSearchResponse buscarSuspeitosPorImagem(MultipartFile image, Integer topK){
-        if(image == null || image.isEmpty()){
+    public FaceSearchResponse buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
+        if (image == null || image.isEmpty()) {
             throw new RuntimeException("image not found");
         }
-       return this.pythonFaceService.buscarSuspeitosPorImagem(image,topK);
+        return this.pythonFaceService.buscarSuspeitosPorImagem(image, topK);
 
     }
 
-    public FaceSearchResponse buscarSuspeitosPorS3(FaceSearchRequest request){
-        return this.pythonFaceService.buscarSuspeitosPorS3(request.getS3Path(),request.getTopK());
+    public FaceSearchResponse buscarSuspeitosPorS3(FaceSearchRequest request) {
+        return this.pythonFaceService.buscarSuspeitosPorS3(request.getS3Path(), request.getTopK());
 
     }
-
 
 
     private void validarCpfDuplicado(String cpf) {

@@ -44,16 +44,17 @@ public class SuspectService {
     public SuspectResponse create(CreateSuspectRequest req, @Nullable MultipartFile file) throws IOException {
         validarCpfDuplicado(req.getCpf());
 
-        Suspect s = mapper.mapTo(req, Suspect.class);
-        s = suspectRepository.save(s);
+        Suspect suspectData = mapper.mapTo(req, Suspect.class);
+        suspectData = suspectRepository.save(suspectData);
 
         Image perfil = null;
 
         if (file != null && !file.isEmpty()) {
-            perfil = salvarImagemDoSuspect(s, file);
+            //perfil = salvarImagemDoSuspect(suspectData, file);
+
 
             try {
-                pythonFaceService.registrarFaceSuspeito(s.getId(), perfil.getUrl());
+                pythonFaceService.registrarSuspeitoImagem(suspectData.getId(),file, req);
             } catch (Exception e) {
                 throw new InternalServerErrorException(
                         "Falha ao registrar face no serviço Python: " + e.getMessage(),
@@ -62,7 +63,7 @@ public class SuspectService {
             }
         }
 
-        return montarResponseComImagens(s);
+        return montarResponseComImagens(suspectData);
     }
 
     @Transactional(readOnly = true)

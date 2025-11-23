@@ -1,13 +1,14 @@
 package br.com.construcao.sistemas.integration.service;
 
+import br.com.construcao.sistemas.controller.dto.request.suspect.CreateSuspectRequest;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
-import br.com.construcao.sistemas.integration.dto.FaceRegisterRequest;
-import br.com.construcao.sistemas.integration.dto.FaceRegisterResponse;
-import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
-import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
+import br.com.construcao.sistemas.integration.dto.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -16,6 +17,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 
 @Service
@@ -27,7 +29,7 @@ public class PythonFaceService {
     @Value("${nexus.python.base-url}")
     private String baseUrl;
 
-    public void registrarFaceSuspeito(Long suspectId, String imageUrl) {
+    public void registrarFaceSuspeito(Long suspectId, String imageUrl, CreateSuspectRequest metadata) {
         String s3Path = toS3Path(imageUrl);
 
         FaceRegisterRequest body = new FaceRegisterRequest(
@@ -48,6 +50,45 @@ public class PythonFaceService {
                     e
             );
         }
+    }
+
+    public void registrarSuspeitoImagem(Long suspectId, MultipartFile image, CreateSuspectRequest metadata){
+
+        try {
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("suspect_id", suspectId.toString());
+            body.add("metadata", new ObjectMapper().writeValueAsString(metadata));
+
+            // Arquivo: MultipartFile -> ByteArrayResource
+            ByteArrayResource imageRequest = new ByteArrayResource(image.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return image.getOriginalFilename(); // obrigatório para o Flask reconhecer como arquivo
+                }
+            };
+            body.add("image", imageRequest);
+
+            HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+            ResponseEntity<Void> response = restTemplate.postForEntity(
+                    baseUrl + "/faces/register",
+                    request,
+                    Void.class
+            );
+
+
+        } catch (RestClientException e) {
+            throw new InternalServerErrorException(
+                    "Falha ao registrar face no serviço Python: " + e.getMessage());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     /**

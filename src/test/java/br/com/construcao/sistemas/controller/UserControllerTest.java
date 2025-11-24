@@ -64,14 +64,17 @@ class UserControllerTest {
     @Test
     void testList() {
         Page<UserResponse> page = new PageImpl<>(List.of(new UserResponse()));
-        when(service.listAllByRole(Role.ADMIN, PageRequest.of(0, 20))).thenReturn(page);
 
-        ResponseEntity<Page<UserResponse>> response = controller.listAllByRole(Role.ADMIN, PageRequest.of(0, 20));
+        when(service.listAllByRole(Role.ADMIN, null, null, PageRequest.of(0, 20))).thenReturn(page);
+
+        ResponseEntity<Page<UserResponse>> response = controller.listAllByRole(Role.ADMIN, null, null, PageRequest.of(0, 20));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(page, response.getBody());
-        verify(service, times(1)).listAllByRole(Role.ADMIN, PageRequest.of(0, 20));
+
+        verify(service, times(1)).listAllByRole(Role.ADMIN, null, null, PageRequest.of(0, 20));
     }
+
 
     @Test
     void testUpdate() throws IOException {

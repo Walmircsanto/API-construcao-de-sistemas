@@ -4,6 +4,7 @@ import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordReq
 import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.service.UserService;
 import jakarta.validation.Valid;
@@ -44,8 +45,10 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<Page<UserResponse>> listAllByRole(@RequestParam(required = false) Role role,
+                                                            @RequestParam(required = false) String query,
+                                                            @RequestParam(required = false) EnumStatus status,
                                                             Pageable pageable) {
-        return ResponseEntity.ok(service.listAllByRole(role, pageable));
+        return ResponseEntity.ok(service.listAllByRole(role, query, status, pageable));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,

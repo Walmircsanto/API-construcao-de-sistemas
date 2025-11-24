@@ -15,6 +15,7 @@ import br.com.construcao.sistemas.exception.UnauthorizedException;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.User;
 import br.com.construcao.sistemas.model.enums.AuthProvider;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.repository.ImageRepository;
@@ -85,8 +86,8 @@ public class UserService {
         return mapper.mapTo(user, UserResponse.class);
     }
 
-    public Page<UserResponse> listAllByRole(Role role, Pageable pageable){
-        return repo.findAllByRole(role, pageable)
+    public Page<UserResponse> listAllByRole(Role role, String query, EnumStatus status, Pageable pageable){
+        return repo.findAllByFilters(role, query, status, pageable)
                 .map(u -> enrichWithProfileImage(mapper.mapTo(u, UserResponse.class), u.getId()));
     }
 

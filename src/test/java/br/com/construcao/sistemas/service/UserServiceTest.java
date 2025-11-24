@@ -110,7 +110,7 @@ class UserServiceTest {
     void testCreate_GeraSenhaProvisoria_EnviaEmail() throws Exception {
         CreateUserRequest req = new CreateUserRequest();
         req.setEmail("novo@test.com");
-        req.setPassword(null); // <- força gerar senha
+        req.setPassword(null);
 
         when(repo.existsByEmail("novo@test.com")).thenReturn(false);
         when(mapper.mapTo(req, User.class)).thenReturn(user);
@@ -195,7 +195,7 @@ class UserServiceTest {
         UserResponse mapped = new UserResponse();
         mapped.setId(10L);
 
-        when(repo.findAll(any(Pageable.class)))
+        when(repo.findAllByFilters(eq(Role.SECURITY), isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(u)));
 
         when(mapper.mapTo(any(User.class), eq(UserResponse.class)))
@@ -204,7 +204,7 @@ class UserServiceTest {
         when(imageRepo.findFirstByUser_IdAndOwnerType(10L, OwnerType.USER))
                 .thenReturn(Optional.of(Image.builder().url("url.png").build()));
 
-        Page<UserResponse> page = service.listAllByRole(Role.SECURITY, PageRequest.of(0, 10));
+        Page<UserResponse> page = service.listAllByRole(Role.SECURITY, null, null, PageRequest.of(0, 10));
 
         assertEquals(1, page.getTotalElements());
         assertEquals("url.png", page.getContent().get(0).getProfileImageUrl());

@@ -151,8 +151,14 @@ public class UserService {
         repo.save(user);
     }
 
-    public void delete(Long id){
-        if (!repo.existsById(id)) throw new NotFoundException("Usuário não encontrado");
+    @Transactional
+    public void delete(Long id) {
+        if (!repo.existsById(id)) {
+            throw new NotFoundException("Usuário não encontrado");
+        }
+
+        imageRepo.deleteByUser_IdAndOwnerType(id, OwnerType.USER);
+
         repo.deleteById(id);
     }
 

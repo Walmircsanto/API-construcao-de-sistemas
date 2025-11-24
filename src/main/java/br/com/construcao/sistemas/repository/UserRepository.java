@@ -18,10 +18,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByFcmToken(String token);
 
-    @Query("SELECT u FROM User u WHERE " +
-            "(:role IS NULL OR u.role = :role) AND " +
-            "(:status IS NULL OR u.status = :status) AND " +
-            "(:query IS NULL OR LOWER(u.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')))")
+    @Query("""
+       SELECT u FROM User u
+       WHERE (:role IS NULL OR u.role = :role)
+         AND (:status IS NULL OR u.status = :status)
+         AND (
+              :query IS NULL OR :query = '' OR
+              u.name  ILIKE CONCAT('%', :query, '%') OR
+              u.email ILIKE CONCAT('%', :query, '%')
+         )
+       """)
     Page<User> findAllByFilters(@Param("role") Role role,
                                 @Param("query") String query,
                                 @Param("status") EnumStatus status,

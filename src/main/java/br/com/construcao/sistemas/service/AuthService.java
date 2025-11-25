@@ -50,6 +50,7 @@ public class AuthService {
             u.setLastFailureAt(Instant.now());
             if (fails >= MAX_FAILS) {
                 u.setLocked(true);
+                u.setEnabled(false);
                 u.setStatus(EnumStatus.BLOQUEADO);
             }
             users.save(u);

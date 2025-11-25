@@ -1,7 +1,7 @@
 package br.com.construcao.sistemas.config.security;
 
 import br.com.construcao.sistemas.model.User;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import br.com.construcao.sistemas.repository.UserRepository;
 import br.com.construcao.sistemas.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -53,7 +53,7 @@ class JwtAuthFilterTest {
         User user = new User();
         user.setId(1L);
         user.setEmail("usuario@test.com");
-        user.setRole(Role.ADMIN);
+        user.setRole(EnumRole.ADMIN);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         filter.doFilterInternal(request, response, chain);

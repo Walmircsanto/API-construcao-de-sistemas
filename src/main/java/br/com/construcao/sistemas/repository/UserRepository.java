@@ -2,13 +2,14 @@ package br.com.construcao.sistemas.repository;
 
 import br.com.construcao.sistemas.model.User;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -28,9 +29,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
               u.email ILIKE CONCAT('%', :query, '%')
          )
        """)
-    Page<User> findAllByFilters(@Param("role") Role role,
+    Page<User> findAllByFilters(@Param("role") EnumRole role,
                                 @Param("query") String query,
                                 @Param("status") EnumStatus status,
                                 Pageable pageable);
+
+    List<User> findByRole(EnumRole role);
 
 }

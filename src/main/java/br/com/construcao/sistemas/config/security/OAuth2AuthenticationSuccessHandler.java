@@ -3,7 +3,7 @@ package br.com.construcao.sistemas.config.security;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.model.User;
 import br.com.construcao.sistemas.model.enums.AuthProvider;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import br.com.construcao.sistemas.repository.UserRepository;
 import br.com.construcao.sistemas.service.JwtService;
 import br.com.construcao.sistemas.service.UserService;
@@ -62,7 +62,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             newUserRegister.setEmail(email);
             newUserRegister.setImgProfile(picture);
             newUserRegister.setAuthProvider(AuthProvider.GOOGLE);
-            newUserRegister.setRole(Role.ADMIN);
+            newUserRegister.setRole(EnumRole.ADMIN);
 
             logger.info("Criando novo usuário OAuth2: {}" + newUserRegister.getName());
             userService.createdUserByGmail(newUserRegister);

@@ -1,11 +1,11 @@
 package br.com.construcao.sistemas.controller;
 
-import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
-import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdatePasswordRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import br.com.construcao.sistemas.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -65,7 +65,7 @@ public class UserController {
             }
     )
     @GetMapping
-    public ResponseEntity<Page<UserResponse>> listAllByFilters(@RequestParam(required = false) Role role,
+    public ResponseEntity<Page<UserResponse>> listAllByFilters(@RequestParam(required = false) EnumRole role,
                                                             @RequestParam(required = false) String query,
                                                             @RequestParam(required = false) EnumStatus status,
                                                             Pageable pageable) {

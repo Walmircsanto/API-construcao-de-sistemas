@@ -2,8 +2,8 @@ package br.com.construcao.sistemas.service;
 
 
 import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
-import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
-import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdatePasswordRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
@@ -17,7 +17,7 @@ import br.com.construcao.sistemas.model.User;
 import br.com.construcao.sistemas.model.enums.AuthProvider;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
 import br.com.construcao.sistemas.util.helpers.PasswordGenerator;
@@ -61,7 +61,7 @@ public class UserService {
         user.setProvisionalPassword(markProvisional);
         user.setProvisionalPasswordExpiresAt(markProvisional ? Instant.now().plus(Duration.ofDays(7)) : null);
 
-        if (user.getRole() == null) user.setRole(Role.SECURITY);
+        if (user.getRole() == null) user.setRole(EnumRole.SECURITY);
         if (user.getProvider() == null) user.setProvider(AuthProvider.LOCAL);
 
         user = repo.save(user);
@@ -86,7 +86,7 @@ public class UserService {
         return mapper.mapTo(user, UserResponse.class);
     }
 
-    public Page<UserResponse> listAllByFilters(Role role, String query, EnumStatus status, Pageable pageable){
+    public Page<UserResponse> listAllByFilters(EnumRole role, String query, EnumStatus status, Pageable pageable){
         return repo.findAllByFilters(role, query, status, pageable)
                 .map(u -> enrichWithProfileImage(mapper.mapTo(u, UserResponse.class), u.getId()));
     }

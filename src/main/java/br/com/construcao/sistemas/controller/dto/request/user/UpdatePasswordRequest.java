@@ -1,8 +1,7 @@
-package br.com.construcao.sistemas.controller.dto.request.login;
+package br.com.construcao.sistemas.controller.dto.request.user;
 
 import br.com.construcao.sistemas.util.annotations.ValidPassword;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

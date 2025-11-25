@@ -10,11 +10,11 @@ import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
@@ -29,7 +29,7 @@ public class AuthService {
 
     private static final int MAX_FAILS = 5;
 
-    @Transactional
+    @Transactional(noRollbackFor = UnauthorizedException.class)
     public AuthResponse loginLocal(LoginRequest req, String ip) {
         String email = req.getEmail().trim().toLowerCase();
 
@@ -53,9 +53,12 @@ public class AuthService {
                 u.setStatus(EnumStatus.BLOQUEADO);
             }
             users.save(u);
+
             int restantes = Math.max(0, MAX_FAILS - fails);
-            throw new UnauthorizedException(restantes == 0 ? "Conta bloqueada" :
-                    "Senha incorreta. Tentativas restantes: " + restantes);
+            throw new UnauthorizedException(
+                    restantes == 0 ? "Conta bloqueada"
+                            : "Senha incorreta. Tentativas restantes: " + restantes
+            );
         }
 
         u.setFailedLogins(0);

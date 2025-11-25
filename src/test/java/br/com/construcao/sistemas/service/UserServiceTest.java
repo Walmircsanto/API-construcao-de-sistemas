@@ -1,8 +1,8 @@
 package br.com.construcao.sistemas.service;
 
 import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
-import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
-import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdatePasswordRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
@@ -14,7 +14,7 @@ import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.User;
 import br.com.construcao.sistemas.model.enums.AuthProvider;
 import br.com.construcao.sistemas.model.enums.OwnerType;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
 import br.com.construcao.sistemas.util.helpers.PasswordGenerator;
@@ -70,7 +70,7 @@ class UserServiceTest {
         user.setName("João");
         user.setEmail("joao@test.com");
         user.setPassword("encoded");
-        user.setRole(Role.SECURITY);
+        user.setRole(EnumRole.SECURITY);
         user.setProvider(AuthProvider.LOCAL);
     }
 
@@ -195,7 +195,7 @@ class UserServiceTest {
         UserResponse mapped = new UserResponse();
         mapped.setId(10L);
 
-        when(repo.findAllByFilters(eq(Role.SECURITY), isNull(), isNull(), any(Pageable.class)))
+        when(repo.findAllByFilters(eq(EnumRole.SECURITY), isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(u)));
 
         when(mapper.mapTo(any(User.class), eq(UserResponse.class)))
@@ -204,7 +204,7 @@ class UserServiceTest {
         when(imageRepo.findFirstByUser_IdAndOwnerType(10L, OwnerType.USER))
                 .thenReturn(Optional.of(Image.builder().url("url.png").build()));
 
-        Page<UserResponse> page = service.listAllByFilters(Role.SECURITY, null, null, PageRequest.of(0, 10));
+        Page<UserResponse> page = service.listAllByFilters(EnumRole.SECURITY, null, null, PageRequest.of(0, 10));
 
         assertEquals(1, page.getTotalElements());
         assertEquals("url.png", page.getContent().get(0).getProfileImageUrl());
@@ -328,7 +328,7 @@ class UserServiceTest {
         u.setId(1L);
 
         UpdateUserRequest req = new UpdateUserRequest();
-        req.setRole(Role.ADMIN);
+        req.setRole(EnumRole.ADMIN);
         req.setEnabled(false);
         req.setLocked(true);
 
@@ -339,7 +339,7 @@ class UserServiceTest {
 
         service.update(1L, req, null);
 
-        assertEquals(Role.ADMIN, u.getRole());
+        assertEquals(EnumRole.ADMIN, u.getRole());
     }
 
     @Test

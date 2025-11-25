@@ -1,6 +1,6 @@
 package br.com.construcao.sistemas.model.enums;
 
-public enum Role {
+public enum EnumRole {
     ADMIN,
     SECURITY
 }

@@ -1,7 +1,7 @@
 package br.com.construcao.sistemas.model;
 
 import br.com.construcao.sistemas.model.enums.AuthProvider;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,7 +40,7 @@ public class User extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     @Column(nullable=false)
-    private Role role;
+    private EnumRole role;
 
     @Enumerated(EnumType.STRING)
     private AuthProvider provider = AuthProvider.LOCAL;
@@ -56,9 +56,6 @@ public class User extends BaseEntity{
 
     private boolean enabled = true;
     private boolean locked = false;
-
-    @Column(nullable=true)
-    private String imgProfile;
 
     private Integer failedLogins = 0;
     private Instant lastFailureAt;

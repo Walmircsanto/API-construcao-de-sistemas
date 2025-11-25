@@ -1,13 +1,11 @@
 package br.com.construcao.sistemas.service;
 
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
-import br.com.construcao.sistemas.model.User;
 import br.com.construcao.sistemas.model.enums.AuthProvider;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -49,7 +47,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
                 newUser.setEmail(email);
                 newUser.setImgProfile(picture);
                 newUser.setAuthProvider(AuthProvider.GOOGLE);
-                newUser.setRole(Role.ADMIN);
+                newUser.setRole(EnumRole.ADMIN);
                 
                 logger.info("Criando novo usuário OAuth2: {}", email);
                 userService.createdUserByGmail(newUser);

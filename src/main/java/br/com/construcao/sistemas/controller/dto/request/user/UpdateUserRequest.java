@@ -1,6 +1,6 @@
-package br.com.construcao.sistemas.controller.dto.request.login;
+package br.com.construcao.sistemas.controller.dto.request.user;
 
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +15,7 @@ public class UpdateUserRequest {
     private String name;
     @Email
     private String email;
-    private Role role;
+    private EnumRole role;
     private Boolean enabled;
     private Boolean locked;
 }

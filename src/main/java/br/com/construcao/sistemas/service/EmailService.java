@@ -77,5 +77,29 @@ public class EmailService {
         mailSender.send(msg);
     }
 
+    public void sendUnlockRequest(String adminEmail,
+                                  String adminName,
+                                  String blockedUserName,
+                                  String blockedUserEmail,
+                                  String ip) {
+
+        String subject = "Solicitação de desbloqueio de usuário";
+
+        StringBuilder body = new StringBuilder()
+                .append("Olá, ").append(adminName).append("!\n\n")
+                .append("O usuário abaixo está solicitando o desbloqueio da conta:\n\n")
+                .append("Nome: ").append(blockedUserName).append("\n")
+                .append("Email: ").append(blockedUserEmail).append("\n")
+                .append("Por favor, acesse o painel administrativo para realizar o desbloqueio.");
+
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(from);
+        msg.setTo(adminEmail);
+        msg.setSubject(subject);
+        msg.setText(body.toString());
+
+        mailSender.send(msg);
+    }
+
 }
 

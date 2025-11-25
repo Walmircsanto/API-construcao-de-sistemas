@@ -1,7 +1,7 @@
 package br.com.construcao.sistemas.service;
 
 import br.com.construcao.sistemas.model.User;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ class JwtServiceTest {
         dummyUser = new User();
         dummyUser.setId(1L);
         dummyUser.setEmail("teste@example.com");
-        dummyUser.setRole(Role.ADMIN);
+        dummyUser.setRole(EnumRole.ADMIN);
     }
 
     @Test

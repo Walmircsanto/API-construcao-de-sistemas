@@ -1,10 +1,10 @@
 package br.com.construcao.sistemas.controller;
 
-import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
-import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdatePasswordRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
-import br.com.construcao.sistemas.model.enums.Role;
+import br.com.construcao.sistemas.model.enums.EnumRole;
 import br.com.construcao.sistemas.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,14 +65,14 @@ class UserControllerTest {
     void testList() {
         Page<UserResponse> page = new PageImpl<>(List.of(new UserResponse()));
 
-        when(service.listAllByFilters(Role.ADMIN, null, null, PageRequest.of(0, 20))).thenReturn(page);
+        when(service.listAllByFilters(EnumRole.ADMIN, null, null, PageRequest.of(0, 20))).thenReturn(page);
 
-        ResponseEntity<Page<UserResponse>> response = controller.listAllByFilters(Role.ADMIN, null, null, PageRequest.of(0, 20));
+        ResponseEntity<Page<UserResponse>> response = controller.listAllByFilters(EnumRole.ADMIN, null, null, PageRequest.of(0, 20));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(page, response.getBody());
 
-        verify(service, times(1)).listAllByFilters(Role.ADMIN, null, null, PageRequest.of(0, 20));
+        verify(service, times(1)).listAllByFilters(EnumRole.ADMIN, null, null, PageRequest.of(0, 20));
     }
 
 

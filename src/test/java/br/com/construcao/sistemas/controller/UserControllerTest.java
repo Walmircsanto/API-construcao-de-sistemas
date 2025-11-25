@@ -65,14 +65,14 @@ class UserControllerTest {
     void testList() {
         Page<UserResponse> page = new PageImpl<>(List.of(new UserResponse()));
 
-        when(service.listAllByRole(Role.ADMIN, null, null, PageRequest.of(0, 20))).thenReturn(page);
+        when(service.listAllByFilters(Role.ADMIN, null, null, PageRequest.of(0, 20))).thenReturn(page);
 
-        ResponseEntity<Page<UserResponse>> response = controller.listAllByRole(Role.ADMIN, null, null, PageRequest.of(0, 20));
+        ResponseEntity<Page<UserResponse>> response = controller.listAllByFilters(Role.ADMIN, null, null, PageRequest.of(0, 20));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(page, response.getBody());
 
-        verify(service, times(1)).listAllByRole(Role.ADMIN, null, null, PageRequest.of(0, 20));
+        verify(service, times(1)).listAllByFilters(Role.ADMIN, null, null, PageRequest.of(0, 20));
     }
 
 

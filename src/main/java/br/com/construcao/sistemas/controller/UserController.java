@@ -7,7 +7,6 @@ import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.Role;
 import br.com.construcao.sistemas.service.UserService;
-import com.google.protobuf.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("api/nexus/user")
@@ -71,7 +69,7 @@ public class UserController {
                                                             @RequestParam(required = false) String query,
                                                             @RequestParam(required = false) EnumStatus status,
                                                             Pageable pageable) {
-        return ResponseEntity.ok(service.listAllByRole(role, query, status, pageable));
+        return ResponseEntity.ok(service.listAllByFilters(role, query, status, pageable));
     }
 
     @Operation(

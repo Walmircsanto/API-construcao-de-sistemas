@@ -86,7 +86,7 @@ public class UserService {
         return mapper.mapTo(user, UserResponse.class);
     }
 
-    public Page<UserResponse> listAllByRole(Role role, String query, EnumStatus status, Pageable pageable){
+    public Page<UserResponse> listAllByFilters(Role role, String query, EnumStatus status, Pageable pageable){
         return repo.findAllByFilters(role, query, status, pageable)
                 .map(u -> enrichWithProfileImage(mapper.mapTo(u, UserResponse.class), u.getId()));
     }

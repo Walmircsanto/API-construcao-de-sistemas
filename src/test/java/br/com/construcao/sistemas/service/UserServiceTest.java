@@ -204,7 +204,7 @@ class UserServiceTest {
         when(imageRepo.findFirstByUser_IdAndOwnerType(10L, OwnerType.USER))
                 .thenReturn(Optional.of(Image.builder().url("url.png").build()));
 
-        Page<UserResponse> page = service.listAllByRole(Role.SECURITY, null, null, PageRequest.of(0, 10));
+        Page<UserResponse> page = service.listAllByFilters(Role.SECURITY, null, null, PageRequest.of(0, 10));
 
         assertEquals(1, page.getTotalElements());
         assertEquals("url.png", page.getContent().get(0).getProfileImageUrl());

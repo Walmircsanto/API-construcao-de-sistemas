@@ -26,7 +26,7 @@ public class OpenApiConfig {
 //        License mitLicense = new License().name("MIT License").url("https://choosealicense.com/licenses/mit/");
 
         Info info = new Info()
-                .title("Api Inove")
+                .title("API NEXUS")
                 .version("1.0")
                 .contact(contact)
                 .description("Esta API apresenta os endpoints do projeto Nexus.").termsOfService("");

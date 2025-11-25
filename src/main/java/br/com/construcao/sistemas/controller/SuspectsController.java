@@ -104,7 +104,7 @@ public class SuspectsController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "Lista de suspeitos retornada.",
-                            content = @Content(schema = @Schema(implementation = PageResponse.class)) // Assume PageResponse é o container
+                            content = @Content(schema = @Schema(implementation = PageResponse.class))
                     )
             }
     )

@@ -5,6 +5,10 @@ import br.com.construcao.sistemas.controller.dto.request.emergency.UpdateEmergen
 import br.com.construcao.sistemas.controller.dto.response.emergency.EmergencyContactResponse;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.service.EmergencyContactService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,14 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Encoding;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,17 +31,6 @@ public class EmergencyContactController {
     @Operation(
             summary = "Cria um novo Contato de Emergência (com imagem opcional)",
             description = "Aceita dados JSON (CreateEmergencyContactRequest) e um arquivo opcional em uma requisição multipart/form-data.",
-            requestBody = @RequestBody(
-                    description = "Dados de criação do contato e arquivo de imagem opcional.",
-                    content = @Content(
-                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            encoding = {
-                                    @Encoding(name = "data", contentType = "application/json"),
-                                    @Encoding(name = "file", contentType = "application/octet-stream")
-                            },
-                            schema = @Schema(type = "object")
-                    )
-            ),
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -87,9 +72,7 @@ public class EmergencyContactController {
                             responseCode = "200",
                             description = "Lista paginada de contatos.",
                             content = @Content(schema = @Schema(
-                                    // Configuração para retornar a estrutura de paginação do Spring Data
                                     implementation = Page.class,
-                                    // Garante que o Swagger saiba que o conteúdo da Page é EmergencyContactResponse
                                     subTypes = EmergencyContactResponse.class
                             ))
                     )
@@ -103,17 +86,6 @@ public class EmergencyContactController {
     @Operation(
             summary = "Atualiza um Contato de Emergência (com imagem opcional)",
             description = "Aceita dados JSON (UpdateEmergencyContactRequest) e um novo arquivo de imagem opcional. Usa multipart/form-data.",
-            requestBody = @RequestBody(
-                    description = "Dados de atualização do contato e novo arquivo de imagem opcional.",
-                    content = @Content(
-                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            encoding = {
-                                    @Encoding(name = "data", contentType = "application/json"),
-                                    @Encoding(name = "file", contentType = "application/octet-stream")
-                            },
-                            schema = @Schema(type = "object")
-                    )
-            ),
             responses = {
                     @ApiResponse(
                             responseCode = "200",

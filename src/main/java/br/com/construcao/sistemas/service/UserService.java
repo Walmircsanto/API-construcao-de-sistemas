@@ -93,7 +93,8 @@ public class UserService {
 
     @Transactional
     public UserResponse update(Long id, UpdateUserRequest req, @Nullable MultipartFile file) throws IOException {
-        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        User user = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
         if (req.getName() != null) user.setName(req.getName());
 
@@ -108,6 +109,16 @@ public class UserService {
         if (req.getRole() != null) user.setRole(req.getRole());
         if (req.getEnabled() != null) user.setEnabled(req.getEnabled());
         if (req.getLocked() != null) user.setLocked(req.getLocked());
+
+        if (user.isEnabled() && !user.isLocked()) {
+            user.setStatus(EnumStatus.INATIVO);
+        } else if (user.isLocked()) {
+            user.setStatus(EnumStatus.BLOQUEADO);
+        } else {
+            user.setStatus(EnumStatus.ATIVO);
+            user.setEnabled(true);
+            user.setFailedLogins(0);
+        }
 
         user = repo.save(user);
 
@@ -131,6 +142,7 @@ public class UserService {
                 .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
         return resp;
     }
+
 
     @Transactional
     public void updatePassword(Long id, UpdatePasswordRequest req){

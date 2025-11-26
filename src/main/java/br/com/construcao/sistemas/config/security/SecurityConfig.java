@@ -32,7 +32,7 @@ public class SecurityConfig {
     private final CustomOAuth2Service oAuth2UserService;
     private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, AccessLogFilter accessLogFilter, 
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, AccessLogFilter accessLogFilter,
                          CorsProperties corsProperties, CustomOAuth2Service oAuth2UserService,
                          OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler) {
         this.jwtAuthFilter = jwtAuthFilter;
@@ -57,6 +57,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/nexus/user/**").permitAll()
                         .requestMatchers("/api/nexus/unlock-request/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/nexus/emergency-contacts/**").permitAll()
+                        .requestMatchers("/api/nexus/admin/notifications/**").permitAll()
+                        .requestMatchers("/api/nexus/faces/**").permitAll()
                         .requestMatchers("/api/nexus/suspects/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

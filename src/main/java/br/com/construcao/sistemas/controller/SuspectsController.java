@@ -5,6 +5,8 @@ import br.com.construcao.sistemas.controller.dto.request.suspect.UpdateSuspectRe
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
+import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
+import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import br.com.construcao.sistemas.service.SuspectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -75,8 +77,8 @@ public class SuspectsController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SuspectResponse> create(
-            @Valid @RequestPart("data") CreateSuspectRequest req,
-            @RequestPart(name = "file", required = false) MultipartFile file
+            @Valid @RequestPart("metadata") CreateSuspectRequest req,
+            @RequestPart(name = "image", required = false) MultipartFile file
     ) throws IOException {
         SuspectResponse body = suspectService.create(req, file);
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
@@ -201,5 +203,16 @@ public class SuspectsController {
     @GetMapping("/{id}/images")
     public ResponseEntity<List<ImageResponse>> listImages(@PathVariable Long id) {
         return ResponseEntity.ok(suspectService.listImages(id));
+    }
+
+
+    @PostMapping("/face-with-s3")
+    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorS3(@RequestBody FaceSearchRequest requestFace){
+        return new ResponseEntity<>(this.suspectService.buscarSuspeitosPorS3(requestFace), HttpStatus.OK );
+    }
+
+    @PostMapping("/face-file")
+    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorFile( @RequestPart("file") MultipartFile file, @RequestPart("topK") Integer topK){
+        return ResponseEntity.ok(this.suspectService.buscarSuspeitosPorImagem(file,topK));
     }
 }

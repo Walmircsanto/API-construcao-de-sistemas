@@ -9,6 +9,10 @@ import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectRespons
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
+import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
+import br.com.construcao.sistemas.integration.dto.FaceSearchRequestImage;
+import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
+import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.enums.OwnerType;
@@ -34,41 +38,59 @@ public class SuspectService {
     private final ImageRepository imageRepository;
     private final MyModelMapper mapper;
     private final UploadFiles uploadFiles;
+    private final PythonFaceService pythonFaceService;
 
     @Transactional
     public SuspectResponse create(CreateSuspectRequest req, @Nullable MultipartFile file) throws IOException {
         validarCpfDuplicado(req.getCpf());
 
-        Suspect s = mapper.mapTo(req, Suspect.class);
-        s = suspectRepository.save(s);
+        Suspect suspectData = mapper.mapTo(req, Suspect.class);
+        suspectData = suspectRepository.save(suspectData);
 
-        if (file != null && !file.isEmpty()) {
-            salvarImagemDoSuspect(s, file);
+
+        //Nesse cenario eu posso tentar de alguma forma analisar a requisição, caso ela tenha um body
+        /*
+         eu salvo e passo o payload, caso seja pelo form-data eu passo a imagem direto
+         */
+        try {
+            Image perfil = null;
+            perfil = salvarImagemDoSuspect(suspectData, file);
+            if (!file.isEmpty()) {
+                //mudar o req para o caminho no bucket S3 gerado
+                pythonFaceService.registrarSuspeitoImagem(suspectData.getId(), file, perfil.getUrl());
+
+            } else {
+
+                pythonFaceService.registrarFaceSuspeito(suspectData.getId(), perfil.getUrl(), req);
+            }
+
+            return montarResponseComImagens(suspectData);
+        }catch (Exception e){
+            throw new InternalServerErrorException("Erro ao criar suspect");
         }
 
-        return montarResponseComImagens(s);
     }
 
     @Transactional(readOnly = true)
-    public SuspectResponse get(Long id){
+    public SuspectResponse get(Long id) {
         Suspect s = suspectRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Suspeito não encontrado"));
         return montarResponseComImagens(s);
     }
 
     @Transactional(readOnly = true)
-    public Page<SuspectResponse> list(Pageable pageable){
+    public Page<SuspectResponse> list(Pageable pageable) {
         return suspectRepository.findAll(pageable)
                 .map(this::montarResponseComImagens);
     }
 
     @Transactional
-    public SuspectResponse update(Long id, UpdateSuspectRequest req){
+    public SuspectResponse update(Long id, UpdateSuspectRequest req) {
         Suspect s = suspectRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Suspeito não encontrado"));
 
         if (req.getName() != null) s.setName(req.getName());
-        if (req.getAge() != null)  s.setAge(req.getAge());
+        if (req.getAge() != null) s.setAge(req.getAge());
         if (req.getDescription() != null) s.setDescription(req.getDescription());
 
         if (req.getCpf() != null && !req.getCpf().equals(s.getCpf())) {
@@ -81,7 +103,7 @@ public class SuspectService {
     }
 
     @Transactional
-    public void delete(Long id){
+    public void delete(Long id) {
         if (!suspectRepository.existsById(id)) throw new NotFoundException("Suspeito não encontrado");
         suspectRepository.deleteById(id);
     }
@@ -95,12 +117,27 @@ public class SuspectService {
     }
 
     @Transactional(readOnly = true)
-    public List<ImageResponse> listImages(Long suspectId){
+    public List<ImageResponse> listImages(Long suspectId) {
         if (!suspectRepository.existsById(suspectId)) throw new NotFoundException("Suspeito não encontrado");
         return imageRepository.findByOwnerTypeAndSuspectId(OwnerType.SUSPECT, suspectId)
                 .stream().map(i -> mapper.mapTo(i, ImageResponse.class))
                 .toList();
     }
+
+    @Transactional
+    public FaceSearchResponse buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
+        if (image == null || image.isEmpty()) {
+            throw new RuntimeException("image not found");
+        }
+        return this.pythonFaceService.buscarSuspeitosPorImagem(image, topK);
+
+    }
+
+    public FaceSearchResponse buscarSuspeitosPorS3(FaceSearchRequest request) {
+        return this.pythonFaceService.buscarSuspeitosPorS3(request.getS3Path(), request.getTopK());
+
+    }
+
 
     private void validarCpfDuplicado(String cpf) {
         if (suspectRepository.existsByCpf(cpf)) {

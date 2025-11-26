@@ -47,18 +47,28 @@ public class SuspectService {
         Suspect suspectData = mapper.mapTo(req, Suspect.class);
         suspectData = suspectRepository.save(suspectData);
 
-        Image perfil = null;
-        perfil = salvarImagemDoSuspect(suspectData, file);
-        if (file != null && !file.isEmpty()) {
-            //mudar o req para o caminho no bucket S3 gerado
-            pythonFaceService.registrarSuspeitoImagem(suspectData.getId(), file, perfil.getUrl());
 
-        } else {
+        //Nesse cenario eu posso tentar de alguma forma analisar a requisição, caso ela tenha um body
+        /*
+         eu salvo e passo o payload, caso seja pelo form-data eu passo a imagem direto
+         */
+        try {
+            Image perfil = null;
+            perfil = salvarImagemDoSuspect(suspectData, file);
+            if (!file.isEmpty()) {
+                //mudar o req para o caminho no bucket S3 gerado
+                pythonFaceService.registrarSuspeitoImagem(suspectData.getId(), file, perfil.getUrl());
 
-            pythonFaceService.registrarFaceSuspeito(suspectData.getId(), perfil.getUrl(), req);
+            } else {
+
+                pythonFaceService.registrarFaceSuspeito(suspectData.getId(), perfil.getUrl(), req);
+            }
+
+            return montarResponseComImagens(suspectData);
+        }catch (Exception e){
+            throw new InternalServerErrorException("Erro ao criar suspect");
         }
 
-        return montarResponseComImagens(suspectData);
     }
 
     @Transactional(readOnly = true)

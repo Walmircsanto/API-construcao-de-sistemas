@@ -43,4 +43,7 @@ public class Incident extends BaseEntity {
 
     @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Image> images = new ArrayList<>();
+
+    // add uma variavel boolean que vai marcar o incident como visualziado ou não, fazer isso no momento de atualizar o IncidentStatus
+
 }

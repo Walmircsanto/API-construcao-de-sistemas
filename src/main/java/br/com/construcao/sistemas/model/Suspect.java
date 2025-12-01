@@ -23,7 +23,7 @@ public class Suspect extends BaseEntity {
     @Column(nullable=false)
     private String name;
 
-    private Integer age;
+    private Integer age; // trocar pra data de nascimento
 
     @Column(nullable=false, unique = true, length = 14)
     private String cpf;

@@ -77,7 +77,7 @@ public class SuspectsController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SuspectResponse> create(
-            @Valid @RequestPart("metadata") CreateSuspectRequest req,
+            @Valid @RequestPart("data") CreateSuspectRequest req,
             @RequestPart(name = "image", required = false) MultipartFile file
     ) throws IOException {
         SuspectResponse body = suspectService.create(req, file);
@@ -206,12 +206,12 @@ public class SuspectsController {
     }
 
 
-    @PostMapping("/face-with-s3")
-    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorS3(@RequestBody FaceSearchRequest requestFace){
-        return new ResponseEntity<>(this.suspectService.buscarSuspeitosPorS3(requestFace), HttpStatus.OK );
-    }
+//    @PostMapping("/search-suspect")
+//    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorS3(@RequestBody FaceSearchRequest requestFace){
+//        return new ResponseEntity<>(this.suspectService.buscarSuspeitosPorS3(requestFace), HttpStatus.OK );
+//    }
 
-    @PostMapping("/face-file")
+    @PostMapping("/search-suspect")
     public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorFile( @RequestPart("file") MultipartFile file, @RequestPart("topK") Integer topK){
         return ResponseEntity.ok(this.suspectService.buscarSuspeitosPorImagem(file,topK));
     }

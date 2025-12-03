@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FaceSearchRequest {
     @JsonProperty("top_k")
-    private Integer topK = 5;
+    private Integer topK = 1;
 
     @JsonProperty("s3_path")
     private String s3Path;

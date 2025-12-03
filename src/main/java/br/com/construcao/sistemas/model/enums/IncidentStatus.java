@@ -5,5 +5,6 @@ public enum IncidentStatus {
     EM_ANALISE,
     CONFIRMADO,
     FALSO_POSITIVO,
-    FECHADO
+    FECHADO,
+    ABERTO
 }

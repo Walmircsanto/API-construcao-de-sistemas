@@ -33,7 +33,7 @@ public class Incident extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private IncidentStatus incidentStatus = IncidentStatus.NOVO;
+    private IncidentStatus incidentStatus = IncidentStatus.ABERTO;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_user_id")

@@ -212,7 +212,7 @@ public class SuspectsController {
 //    }
 
     @PostMapping("/search-suspect")
-    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorFile( @RequestPart("file") MultipartFile file, @RequestPart("topK") Integer topK){
+    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorFile( @RequestPart("image") MultipartFile file, @RequestPart("topK") Integer topK){
         return ResponseEntity.ok(this.suspectService.buscarSuspeitosPorImagem(file,topK));
     }
 }

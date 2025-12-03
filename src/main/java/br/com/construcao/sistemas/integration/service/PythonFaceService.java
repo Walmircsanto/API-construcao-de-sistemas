@@ -3,6 +3,7 @@ package br.com.construcao.sistemas.integration.service;
 import br.com.construcao.sistemas.controller.dto.request.suspect.CreateSuspectRequest;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.integration.dto.*;
+import br.com.construcao.sistemas.integration.dto.suspect.SuspectData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -30,21 +31,22 @@ public class PythonFaceService {
     private String baseUrl;
 
     public void registrarFaceSuspeito(Long suspectId, String imageUrl, CreateSuspectRequest metadata) {
+        
         String s3Path = toS3Path(imageUrl);
-
         FaceRegisterRequest body = new FaceRegisterRequest(
                 suspectId,
-                s3Path
+                s3Path,
+                metadata.getCpf()
         );
 
         try {
-            System.out.println(baseUrl + " A base url e essa ai ");
-            restTemplate.postForEntity(
+            ResponseEntity<Void> response = restTemplate.postForEntity(
                     baseUrl + "/faces/register",
                     body,
                     Void.class
             );
         } catch (RestClientException e) {
+            e.printStackTrace();
             throw new InternalServerErrorException(
                     "Falha ao registrar face no serviço Python: " + e.getMessage(),
                     e
@@ -52,43 +54,46 @@ public class PythonFaceService {
         }
     }
 
-    public void registrarSuspeitoImagem(Long suspectId, MultipartFile image, String s3Path){
+    public void registrarSuspeitoImagem(SuspectData suspectData, MultipartFile image, String s3Path){
 
         try {
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("suspect_id", suspectId.toString());
+            body.add("suspect_id", suspectData.getSuspectId().toString());
             body.add("s3_path", s3Path);
+            body.add("cpf", suspectData.getCpfSuspect());
 
             // Arquivo: MultipartFile -> ByteArrayResource
             ByteArrayResource imageRequest = new ByteArrayResource(image.getBytes()) {
                 @Override
                 public String getFilename() {
-                    return image.getOriginalFilename(); // obrigatório para o Flask reconhecer como arquivo
+                    return image.getOriginalFilename();
                 }
             };
             body.add("image", imageRequest);
 
+            System.out.println("Enviando requisição para API Python...");
             HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+            
             ResponseEntity<Void> response = restTemplate.postForEntity(
                     baseUrl + "/faces/register",
                     request,
                     Void.class
             );
-
+            
+            System.out.println("Resposta da API Python: " + response.getStatusCode());
 
         } catch (RestClientException e) {
+            System.err.println("Erro de comunicação com API Python: " + e.getMessage());
+            e.printStackTrace();
             throw new InternalServerErrorException(
                     "Falha ao registrar face no serviço Python: " + e.getMessage());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.err.println("Erro ao processar arquivo: " + e.getMessage());
+            throw new InternalServerErrorException("Erro ao processar arquivo de imagem: " + e.getMessage());
         }
-
     }
 
     /**

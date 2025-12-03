@@ -16,4 +16,7 @@ public class FaceRegisterRequest {
 
     @JsonProperty("s3_path")
     private String imagePath;
+
+    @JsonProperty("metadata")
+    private String metadata;
 }

@@ -10,8 +10,8 @@ import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
-import br.com.construcao.sistemas.integration.dto.FaceSearchRequestImage;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
+import br.com.construcao.sistemas.integration.dto.suspect.SuspectData;
 import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
@@ -46,27 +46,20 @@ public class SuspectService {
 
         Suspect suspectData = mapper.mapTo(req, Suspect.class);
         suspectData = suspectRepository.save(suspectData);
-
-
-        //Nesse cenario eu posso tentar de alguma forma analisar a requisição, caso ela tenha um body
-        /*
-         eu salvo e passo o payload, caso seja pelo form-data eu passo a imagem direto
-         */
         try {
             Image perfil = null;
-            perfil = salvarImagemDoSuspect(suspectData, file);
+
             if (!file.isEmpty()) {
+                perfil = salvarImagemDoSuspect(suspectData, file);
+                SuspectData suspectRequest = new SuspectData(req.getCpf(),suspectData.getId());
                 //mudar o req para o caminho no bucket S3 gerado
-                pythonFaceService.registrarSuspeitoImagem(suspectData.getId(), file, perfil.getUrl());
+                pythonFaceService.registrarFaceSuspeito(suspectData.getId(),perfil.getUrl(), req);
 
-            } else {
-
-                pythonFaceService.registrarFaceSuspeito(suspectData.getId(), perfil.getUrl(), req);
             }
 
             return montarResponseComImagens(suspectData);
         }catch (Exception e){
-            throw new InternalServerErrorException("Erro ao criar suspect");
+            throw new InternalServerErrorException("Erro ao criar suspect " + e.getMessage());
         }
 
     }

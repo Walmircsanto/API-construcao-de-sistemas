@@ -41,7 +41,7 @@ class SuspectsControllerTest {
 
         when(suspectService.create(req, file)).thenReturn(resp);
 
-        ResponseEntity<SuspectResponse> response = controller.create(req, file);
+        ResponseEntity<Void> response = controller.create(req, file);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(resp, response.getBody());

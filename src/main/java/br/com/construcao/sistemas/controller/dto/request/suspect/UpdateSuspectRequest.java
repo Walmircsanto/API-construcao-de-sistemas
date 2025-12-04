@@ -1,7 +1,6 @@
 package br.com.construcao.sistemas.controller.dto.request.suspect;
 
 import br.com.construcao.sistemas.model.enums.SuspectStatus;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,5 +20,5 @@ public class UpdateSuspectRequest {
     private String cpf;
     @Size(max = 2000)
     private String description;
-    private SuspectStatus  suspectStatus;
+    private SuspectStatus suspectStatus;
 }

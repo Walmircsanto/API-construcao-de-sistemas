@@ -6,16 +6,17 @@ import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.service.SuspectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -97,10 +98,11 @@ public class SuspectsController {
     )
     @GetMapping
     public ResponseEntity<PageResponse<SuspectResponse>> list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) EnumStatus status,
+            Pageable pageable
     ) {
-        Page<SuspectResponse> p = suspectService.list(PageRequest.of(page, Math.min(size, 100)));
+        Page<SuspectResponse> p = suspectService.list(query, status, pageable);
         return ResponseEntity.ok(PageResponse.of(p));
     }
 

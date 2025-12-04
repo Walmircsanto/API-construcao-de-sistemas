@@ -107,23 +107,37 @@ public class UserService {
         }
 
         if (req.getRole() != null) user.setRole(req.getRole());
-        if (req.getEnabled() != null) user.setEnabled(req.getEnabled());
-        if (req.getLocked() != null) user.setLocked(req.getLocked());
 
-        if (user.isEnabled() && !user.isLocked()) {
-            user.setStatus(EnumStatus.INATIVO);
-        } else if (user.isLocked()) {
-            user.setStatus(EnumStatus.BLOQUEADO);
-        } else {
-            user.setStatus(EnumStatus.ATIVO);
-            user.setEnabled(true);
-            user.setFailedLogins(0);
+        if (req.getStatus() != null) {
+
+            EnumStatus newStatus = req.getStatus();
+            user.setStatus(newStatus);
+
+            switch (newStatus) {
+
+                case ATIVO -> {
+                    user.setEnabled(true);
+                    user.setLocked(false);
+                    user.setFailedLogins(0);
+                }
+
+                case INATIVO -> {
+                    user.setEnabled(false);
+                    user.setLocked(false);
+                }
+
+                case BLOQUEADO -> {
+                    user.setEnabled(false);
+                    user.setLocked(true);
+                }
+            }
         }
 
         user = repo.save(user);
 
         if (file != null && !file.isEmpty()) {
             imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
+
             String url = uploadFiles.putObject(file);
             if (url == null) throw new InternalServerErrorException("Falha ao salvar no bucket");
 
@@ -134,15 +148,16 @@ public class UserService {
                     .contentType(file.getContentType())
                     .sizeBytes(file.getSize())
                     .build();
+
             imageRepo.save(img);
         }
 
         UserResponse resp = mapper.mapTo(user, UserResponse.class);
         imageRepo.findFirstByUser_IdAndOwnerType(user.getId(), OwnerType.USER)
                 .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
+
         return resp;
     }
-
 
     @Transactional
     public void updatePassword(Long id, UpdatePasswordRequest req){

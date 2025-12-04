@@ -14,6 +14,7 @@ import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.SuspectRepository;
@@ -68,8 +69,8 @@ public class SuspectService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SuspectResponse> list(Pageable pageable) {
-        return suspectRepository.findAll(pageable)
+    public Page<SuspectResponse> list(String query, EnumStatus status, Pageable pageable) {
+        return suspectRepository.findAllByFilters(query, status, pageable)
                 .map(this::montarResponseComImagens);
     }
 

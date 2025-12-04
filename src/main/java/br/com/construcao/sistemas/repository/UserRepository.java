@@ -36,4 +36,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByRole(EnumRole role);
 
+    List<User> findByStatus(EnumStatus status);
 }

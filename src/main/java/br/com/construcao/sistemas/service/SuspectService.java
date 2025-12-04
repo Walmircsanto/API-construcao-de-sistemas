@@ -14,6 +14,7 @@ import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
+import br.com.construcao.sistemas.model.enums.EnumProcessingStatus;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.repository.ImageRepository;
@@ -46,19 +47,28 @@ public class SuspectService {
 
         Suspect suspectData = mapper.mapTo(req, Suspect.class);
         suspectData = suspectRepository.save(suspectData);
+
         try {
             Image perfil = null;
 
             if (!file.isEmpty()) {
                 perfil = salvarImagemDoSuspect(suspectData, file);
-                pythonFaceService.registrarFaceSuspeito(suspectData.getId(), perfil.getUrl(), req);
+
+                String jobId = pythonFaceService.registrarFaceSuspeito(
+                        suspectData.getId(),
+                        perfil.getUrl(),
+                        req
+                );
+
+                suspectData.setFaceProcessingJobId(jobId);
+                suspectData.setFaceProcessingStatus(EnumProcessingStatus.PROCESSANDO);
+                suspectRepository.save(suspectData);
             }
 
             return montarResponseComImagens(suspectData);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new InternalServerErrorException("Erro ao criar suspect " + e.getMessage());
         }
-
     }
 
     @Transactional(readOnly = true)

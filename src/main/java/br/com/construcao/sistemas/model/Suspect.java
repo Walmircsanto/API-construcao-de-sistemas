@@ -1,6 +1,7 @@
 package br.com.construcao.sistemas.model;
 
 
+import br.com.construcao.sistemas.model.enums.EnumProcessingStatus;
 import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -38,4 +39,11 @@ public class Suspect extends BaseEntity {
 
     @OneToMany(mappedBy = "suspect", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Image> images = new ArrayList<>();
+
+    @Column(name = "face_processing_job_id")
+    private String faceProcessingJobId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "face_processing_status")
+    private EnumProcessingStatus faceProcessingStatus = EnumProcessingStatus.PENDENTE;
 }

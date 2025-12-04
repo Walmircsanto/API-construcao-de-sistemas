@@ -4,8 +4,9 @@ import lombok.Data;
 
 @Data
 public class FaceRegisterResponse {
+    private String jobId;
+    private String status;
     private String message;
-    private Long face_id;
-    private Long suspect_id;
-    private String source;
+    private Long suspectId;
+    private String s3Path;
 }

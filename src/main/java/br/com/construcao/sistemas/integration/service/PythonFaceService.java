@@ -3,6 +3,7 @@ package br.com.construcao.sistemas.integration.service;
 import br.com.construcao.sistemas.controller.dto.request.suspect.CreateSuspectRequest;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.integration.dto.FaceRegisterRequest;
+import br.com.construcao.sistemas.integration.dto.FaceRegisterResponse;
 import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +31,7 @@ public class PythonFaceService {
     @Value("${nexus.python.base-url}")
     private String baseUrl;
 
-    public void registrarFaceSuspeito(Long suspectId, String imageUrl, CreateSuspectRequest metadata) {
-
+    public String registrarFaceSuspeito(Long suspectId, String imageUrl, CreateSuspectRequest metadata) {
         String s3Path = toS3Path(imageUrl);
         FaceRegisterRequest body = new FaceRegisterRequest(
                 suspectId,
@@ -40,11 +40,14 @@ public class PythonFaceService {
         );
 
         try {
-            ResponseEntity<Void> response = restTemplate.postForEntity(
+            ResponseEntity<FaceRegisterResponse> response = restTemplate.postForEntity(
                     baseUrl + "/faces/register",
                     body,
-                    Void.class
+                    FaceRegisterResponse.class
             );
+
+            return response.getBody().getJobId();
+
         } catch (RestClientException e) {
             e.printStackTrace();
             throw new InternalServerErrorException(

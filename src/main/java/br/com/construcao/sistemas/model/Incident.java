@@ -32,7 +32,6 @@ public class Incident extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private IncidentStatus incidentStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)

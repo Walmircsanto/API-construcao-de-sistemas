@@ -8,6 +8,7 @@ import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectRespons
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
+import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.enums.OwnerType;
@@ -33,8 +34,8 @@ class SuspectServiceTest {
     private ImageRepository imageRepository;
     private MyModelMapper mapper;
     private UploadFiles uploadFiles;
-
     private SuspectService service;
+    private PythonFaceService pythonFaceService;
 
     @BeforeEach
     void setup() {
@@ -47,7 +48,8 @@ class SuspectServiceTest {
                 suspectRepository,
                 imageRepository,
                 mapper,
-                uploadFiles
+                uploadFiles,
+                pythonFaceService
         );
     }
 

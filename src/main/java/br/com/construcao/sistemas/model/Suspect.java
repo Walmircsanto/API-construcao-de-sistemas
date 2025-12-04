@@ -5,6 +5,7 @@ import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class Suspect extends BaseEntity {
     @Column(nullable=false)
     private String name;
 
-    private Integer age; // trocar pra data de nascimento
+    private LocalDate birthDate;
 
     @Column(nullable=false, unique = true, length = 14)
     private String cpf;

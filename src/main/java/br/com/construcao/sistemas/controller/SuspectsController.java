@@ -5,10 +5,13 @@ import br.com.construcao.sistemas.controller.dto.request.suspect.UpdateSuspectRe
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
-import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import br.com.construcao.sistemas.service.SuspectService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -18,13 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Encoding;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.io.IOException;
 import java.util.List;
@@ -44,17 +40,6 @@ public class SuspectsController {
     @Operation(
             summary = "Cria um novo suspeito com dados e, opcionalmente, um arquivo",
             description = "Este endpoint aceita dados JSON (`CreateSuspectRequest`) e um arquivo em uma requisição `multipart/form-data`.",
-            requestBody = @RequestBody(
-                    description = "Dados de criação do suspeito e arquivo opcional.",
-                    content = @Content(
-                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            encoding = {
-                                    @Encoding(name = "data", contentType = "application/json"),
-                                    @Encoding(name = "file", contentType = "application/octet-stream")
-                            },
-                            schema = @Schema(type = "object")
-                    )
-            ),
             responses = {
                     @ApiResponse(
                             responseCode = "201",
@@ -76,12 +61,12 @@ public class SuspectsController {
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SuspectResponse> create(
+    public ResponseEntity<Void> create(
             @Valid @RequestPart("data") CreateSuspectRequest req,
             @RequestPart(name = "image", required = false) MultipartFile file
     ) throws IOException {
-        SuspectResponse body = suspectService.create(req, file);
-        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+        suspectService.create(req, file);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Operation(
@@ -121,11 +106,6 @@ public class SuspectsController {
 
     @Operation(
             summary = "Atualiza os dados de um suspeito",
-            requestBody = @RequestBody(
-                    description = "Dados de atualização do suspeito.",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = UpdateSuspectRequest.class))
-            ),
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -159,18 +139,6 @@ public class SuspectsController {
 
     @Operation(
             summary = "Adiciona uma imagem a um suspeito existente",
-            requestBody = @RequestBody(
-                    description = "Arquivo da imagem a ser anexada.",
-                    required = true,
-                    content = @Content(
-                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            schema = @Schema(type = "object"),
-                            encoding = @io.swagger.v3.oas.annotations.media.Encoding(
-                                    name = "file",
-                                    contentType = "application/octet-stream"
-                            )
-                    )
-            ),
             responses = {
                     @ApiResponse(
                             responseCode = "201",
@@ -212,7 +180,7 @@ public class SuspectsController {
 //    }
 
     @PostMapping("/search-suspect")
-    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorFile( @RequestPart("image") MultipartFile file, @RequestPart("topK") Integer topK){
-        return ResponseEntity.ok(this.suspectService.buscarSuspeitosPorImagem(file,topK));
+    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorFile(@RequestPart("image") MultipartFile file, @RequestPart("topK") Integer topK) {
+        return ResponseEntity.ok(this.suspectService.buscarSuspeitosPorImagem(file, topK));
     }
 }

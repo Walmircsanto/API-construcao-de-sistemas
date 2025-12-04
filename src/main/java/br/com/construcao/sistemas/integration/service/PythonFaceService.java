@@ -2,15 +2,16 @@ package br.com.construcao.sistemas.integration.service;
 
 import br.com.construcao.sistemas.controller.dto.request.suspect.CreateSuspectRequest;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
-import br.com.construcao.sistemas.integration.dto.*;
-import br.com.construcao.sistemas.integration.dto.suspect.SuspectData;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import br.com.construcao.sistemas.integration.dto.FaceRegisterRequest;
+import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
+import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -18,7 +19,6 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 
 @Service
@@ -31,7 +31,7 @@ public class PythonFaceService {
     private String baseUrl;
 
     public void registrarFaceSuspeito(Long suspectId, String imageUrl, CreateSuspectRequest metadata) {
-        
+
         String s3Path = toS3Path(imageUrl);
         FaceRegisterRequest body = new FaceRegisterRequest(
                 suspectId,
@@ -54,53 +54,53 @@ public class PythonFaceService {
         }
     }
 
-    public void registrarSuspeitoImagem(SuspectData suspectData, MultipartFile image, String s3Path){
-
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("suspect_id", suspectData.getSuspectId().toString());
-            body.add("s3_path", s3Path);
-            body.add("cpf", suspectData.getCpfSuspect());
-
-            // Arquivo: MultipartFile -> ByteArrayResource
-            ByteArrayResource imageRequest = new ByteArrayResource(image.getBytes()) {
-                @Override
-                public String getFilename() {
-                    return image.getOriginalFilename();
-                }
-            };
-            body.add("image", imageRequest);
-
-            System.out.println("Enviando requisição para API Python...");
-            HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
-            
-            ResponseEntity<Void> response = restTemplate.postForEntity(
-                    baseUrl + "/faces/register",
-                    request,
-                    Void.class
-            );
-            
-            System.out.println("Resposta da API Python: " + response.getStatusCode());
-
-        } catch (RestClientException e) {
-            System.err.println("Erro de comunicação com API Python: " + e.getMessage());
-            e.printStackTrace();
-            throw new InternalServerErrorException(
-                    "Falha ao registrar face no serviço Python: " + e.getMessage());
-        } catch (IOException e) {
-            System.err.println("Erro ao processar arquivo: " + e.getMessage());
-            throw new InternalServerErrorException("Erro ao processar arquivo de imagem: " + e.getMessage());
-        }
-    }
+//    public void registrarSuspeitoImagem(SuspectData suspectData, MultipartFile image, String s3Path){
+//
+//        try {
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+//
+//            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+//            body.add("suspect_id", suspectData.getSuspectId().toString());
+//            body.add("s3_path", s3Path);
+//            body.add("cpf", suspectData.getCpfSuspect());
+//
+//            // Arquivo: MultipartFile -> ByteArrayResource
+//            ByteArrayResource imageRequest = new ByteArrayResource(image.getBytes()) {
+//                @Override
+//                public String getFilename() {
+//                    return image.getOriginalFilename();
+//                }
+//            };
+//            body.add("image", imageRequest);
+//
+//            System.out.println("Enviando requisição para API Python...");
+//            HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+//
+//            ResponseEntity<Void> response = restTemplate.postForEntity(
+//                    baseUrl + "/faces/register",
+//                    request,
+//                    Void.class
+//            );
+//
+//            System.out.println("Resposta da API Python: " + response.getStatusCode());
+//
+//        } catch (RestClientException e) {
+//            System.err.println("Erro de comunicação com API Python: " + e.getMessage());
+//            e.printStackTrace();
+//            throw new InternalServerErrorException(
+//                    "Falha ao registrar face no serviço Python: " + e.getMessage());
+//        } catch (IOException e) {
+//            System.err.println("Erro ao processar arquivo: " + e.getMessage());
+//            throw new InternalServerErrorException("Erro ao processar arquivo de imagem: " + e.getMessage());
+//        }
+//    }
 
     /**
      * Converte:
-     *  https://apijava-qrcode.s3.us-west-1.amazonaws.com/João Gabriel.png_1763379626900
+     * https://apijava-qrcode.s3.us-west-1.amazonaws.com/João Gabriel.png_1763379626900
      * em:
-     *  s3://apijava-qrcode/João Gabriel.png_1763379626900
+     * s3://apijava-qrcode/João Gabriel.png_1763379626900
      */
     private String toS3Path(String url) {
         if (url == null || url.isBlank()) {
@@ -136,7 +136,6 @@ public class PythonFaceService {
 
         return "s3://" + bucket + "/" + key;
     }
-
 
 
     public FaceSearchResponse buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {

@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,8 +19,7 @@ public class CreateSuspectRequest {
     @NotBlank
     private String name;
 
-    @Min(0)
-    private Integer age;
+    private LocalDate birthDate;
 
     @NotBlank
     private String cpf;

@@ -11,10 +11,11 @@ import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
-import br.com.construcao.sistemas.integration.dto.suspect.SuspectData;
 import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
+import br.com.construcao.sistemas.model.enums.EnumProcessingStatus;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.SuspectRepository;
@@ -46,22 +47,28 @@ public class SuspectService {
 
         Suspect suspectData = mapper.mapTo(req, Suspect.class);
         suspectData = suspectRepository.save(suspectData);
+
         try {
             Image perfil = null;
 
             if (!file.isEmpty()) {
                 perfil = salvarImagemDoSuspect(suspectData, file);
-                SuspectData suspectRequest = new SuspectData(req.getCpf(),suspectData.getId());
-                //mudar o req para o caminho no bucket S3 gerado
-                pythonFaceService.registrarFaceSuspeito(suspectData.getId(),perfil.getUrl(), req);
 
+                String jobId = pythonFaceService.registrarFaceSuspeito(
+                        suspectData.getId(),
+                        perfil.getUrl(),
+                        req
+                );
+
+                suspectData.setFaceProcessingJobId(jobId);
+                suspectData.setFaceProcessingStatus(EnumProcessingStatus.PROCESSANDO);
+                suspectRepository.save(suspectData);
             }
 
             return montarResponseComImagens(suspectData);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new InternalServerErrorException("Erro ao criar suspect " + e.getMessage());
         }
-
     }
 
     @Transactional(readOnly = true)
@@ -72,8 +79,8 @@ public class SuspectService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SuspectResponse> list(Pageable pageable) {
-        return suspectRepository.findAll(pageable)
+    public Page<SuspectResponse> list(String query, EnumStatus status, Pageable pageable) {
+        return suspectRepository.findAllByFilters(query, status, pageable)
                 .map(this::montarResponseComImagens);
     }
 
@@ -83,8 +90,9 @@ public class SuspectService {
                 .orElseThrow(() -> new NotFoundException("Suspeito não encontrado"));
 
         if (req.getName() != null) s.setName(req.getName());
-        if (req.getAge() != null) s.setAge(req.getAge());
+        if (req.getBirthDate() != null) s.setBirthDate(req.getBirthDate());
         if (req.getDescription() != null) s.setDescription(req.getDescription());
+        if (req.getSuspectStatus() != null) s.setSuspectStatus(req.getSuspectStatus());
 
         if (req.getCpf() != null && !req.getCpf().equals(s.getCpf())) {
             validarCpfDuplicado(req.getCpf());

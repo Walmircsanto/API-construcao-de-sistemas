@@ -5,6 +5,7 @@ import br.com.construcao.sistemas.controller.dto.request.suspect.UpdateSuspectRe
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.service.SuspectService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,8 +15,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -41,7 +45,7 @@ class SuspectsControllerTest {
 
         when(suspectService.create(req, file)).thenReturn(resp);
 
-        ResponseEntity<SuspectResponse> response = controller.create(req, file);
+        ResponseEntity<Void> response = controller.create(req, file);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(resp, response.getBody());
@@ -62,16 +66,23 @@ class SuspectsControllerTest {
     }
 
     @Test
-    void testList() {
-        Page<SuspectResponse> page = new PageImpl<>(List.of(new SuspectResponse()));
-        when(suspectService.list(PageRequest.of(0, 20))).thenReturn(page);
+    void testListController() {
+        String query = "john";
+        EnumStatus status = EnumStatus.ATIVO;
+        Pageable pageable = PageRequest.of(0, 20);
 
-        ResponseEntity<PageResponse<SuspectResponse>> response = controller.list(0, 20);
+        Page<SuspectResponse> page = new PageImpl<>(List.of(new SuspectResponse()));
+
+        when(suspectService.list(query, status, pageable)).thenReturn(page);
+
+        ResponseEntity<PageResponse<SuspectResponse>> response =
+                controller.list(query, status, pageable);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(page.getContent(), response.getBody().getItems());
-        verify(suspectService, times(1)).list(PageRequest.of(0, 20));
+        verify(suspectService, times(1)).list(query, status, pageable);
     }
+
 
     @Test
     void testUpdate() {

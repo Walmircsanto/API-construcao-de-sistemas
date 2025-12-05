@@ -8,8 +8,10 @@ import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectRespons
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
+import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.SuspectRepository;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -33,8 +36,8 @@ class SuspectServiceTest {
     private ImageRepository imageRepository;
     private MyModelMapper mapper;
     private UploadFiles uploadFiles;
-
     private SuspectService service;
+    private PythonFaceService pythonFaceService;
 
     @BeforeEach
     void setup() {
@@ -47,7 +50,8 @@ class SuspectServiceTest {
                 suspectRepository,
                 imageRepository,
                 mapper,
-                uploadFiles
+                uploadFiles,
+                pythonFaceService
         );
     }
 
@@ -121,19 +125,26 @@ class SuspectServiceTest {
     }
 
     @Test
-    void testList() {
+    void testListService() {
+        String query = "john";
+        EnumStatus status = EnumStatus.ATIVO;
+        Pageable pageable = PageRequest.of(0, 10);
+
         Suspect s = new Suspect();
         s.setId(1L);
 
         Page<Suspect> page = new PageImpl<>(List.of(s));
-        when(suspectRepository.findAll(any(PageRequest.class))).thenReturn(page);
+
+        when(suspectRepository.findAllByFilters(query, status, pageable))
+                .thenReturn(page);
 
         when(imageRepository.findByOwnerTypeAndSuspectId(OwnerType.SUSPECT, 1L))
                 .thenReturn(List.of());
 
-        when(mapper.mapTo(s, SuspectResponse.class)).thenReturn(new SuspectResponse());
+        when(mapper.mapTo(s, SuspectResponse.class))
+                .thenReturn(new SuspectResponse());
 
-        Page<SuspectResponse> resp = service.list(PageRequest.of(0, 10));
+        Page<SuspectResponse> resp = service.list(query, status, pageable);
 
         assertEquals(1, resp.getTotalElements());
     }

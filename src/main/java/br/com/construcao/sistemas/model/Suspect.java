@@ -1,10 +1,12 @@
 package br.com.construcao.sistemas.model;
 
 
+import br.com.construcao.sistemas.model.enums.EnumProcessingStatus;
 import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +25,7 @@ public class Suspect extends BaseEntity {
     @Column(nullable=false)
     private String name;
 
-    private Integer age; // trocar pra data de nascimento
+    private LocalDate birthDate;
 
     @Column(nullable=false, unique = true, length = 14)
     private String cpf;
@@ -37,4 +39,11 @@ public class Suspect extends BaseEntity {
 
     @OneToMany(mappedBy = "suspect", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Image> images = new ArrayList<>();
+
+    @Column(name = "face_processing_job_id")
+    private String faceProcessingJobId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "face_processing_status")
+    private EnumProcessingStatus faceProcessingStatus = EnumProcessingStatus.PENDENTE;
 }

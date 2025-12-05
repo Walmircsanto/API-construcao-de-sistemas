@@ -17,6 +17,7 @@ import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.enums.EnumProcessingStatus;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
+import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.SuspectRepository;
 import jakarta.annotation.Nullable;
@@ -79,7 +80,7 @@ public class SuspectService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SuspectResponse> list(String query, EnumStatus status, Pageable pageable) {
+    public Page<SuspectResponse> list(String query, SuspectStatus status, Pageable pageable) {
         return suspectRepository.findAllByFilters(query, status, pageable)
                 .map(this::montarResponseComImagens);
     }

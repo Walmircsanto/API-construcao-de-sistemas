@@ -37,20 +37,18 @@ public class FaceProcessingWebhookController {
 
         if ("completed".equals(webhook.getStatus())) {
             suspect.setFaceProcessingStatus(EnumProcessingStatus.COMPLETO);
+            suspectRepository.save(suspect);
+            enviarNotificacao(suspect, true);
         } else if ("failed".equals(webhook.getStatus())) {
             suspect.setFaceProcessingStatus(EnumProcessingStatus.FALHOU);
-        }
-
-        suspectRepository.save(suspect);
-
-        if ("completed".equals(webhook.getStatus())) {
-            enviarNotificacao(suspect);
+            suspectRepository.save(suspect);
+            enviarNotificacao(suspect, false);
         }
 
         return ResponseEntity.ok().build();
     }
 
-    private void enviarNotificacao(Suspect suspect) {
+    private void enviarNotificacao(Suspect suspect, boolean sucesso) {
         List<User> users = userRepository.findByStatus(EnumStatus.ATIVO);
 
         if (users.isEmpty()) {
@@ -62,14 +60,24 @@ public class FaceProcessingWebhookController {
                 .collect(Collectors.toList());
 
         NotificationRequest notification = new NotificationRequest();
-        notification.setTitle("Novo Suspeito Registrado");
-        notification.setBody(String.format(
-                "Suspeito %s foi registrado com sucesso no sistema de reconhecimento facial.",
-                suspect.getName()
-        ));
+
+        if (sucesso) {
+            notification.setTitle("Novo Suspeito Registrado");
+            notification.setBody(String.format(
+                    "Suspeito %s foi cadastrado com sucesso no sistema de reconhecimento facial.",
+                    suspect.getName()
+            ));
+        } else {
+            notification.setTitle("Erro ao Registrar Suspeito");
+            notification.setBody(String.format(
+                    "Houve um erro ao cadastrar o suspeito %s no sistema de reconhecimento facial.",
+                    suspect.getName()
+            ));
+        }
+
+        notification.setRoute("/fugitives/" + suspect.getCpf());
         notification.setUserIds(userIds);
 
-        System.out.println("Usuários: " + userIds);
         notificationProducer.enqueueToUsers(notification);
     }
 }

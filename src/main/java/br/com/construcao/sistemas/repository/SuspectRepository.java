@@ -2,6 +2,7 @@ package br.com.construcao.sistemas.repository;
 
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
+import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,6 +27,6 @@ public interface SuspectRepository extends JpaRepository<Suspect, Long> {
               )
             """)
     Page<Suspect> findAllByFilters(@Param("query") String query,
-                                   @Param("status") EnumStatus status,
+                                   @Param("status") SuspectStatus status,
                                    Pageable pageable);
 }

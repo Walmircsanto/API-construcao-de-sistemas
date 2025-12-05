@@ -31,7 +31,7 @@ public class EmailService {
         if (expiresAt != null) {
             ZonedDateTime zdt = expiresAt.atZone(ZoneId.systemDefault());
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            expiresFormatted = fmt.format(zdt);
+            expiresFormatted = fmt.format(zdt);;
         }
 
         StringBuilder body = new StringBuilder()

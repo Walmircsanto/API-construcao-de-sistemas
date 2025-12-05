@@ -7,6 +7,7 @@ import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
+import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import br.com.construcao.sistemas.service.SuspectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -99,7 +100,7 @@ public class SuspectsController {
     @GetMapping
     public ResponseEntity<PageResponse<SuspectResponse>> list(
             @RequestParam(required = false) String query,
-            @RequestParam(required = false) EnumStatus status,
+            @RequestParam(required = false) SuspectStatus status,
             Pageable pageable
     ) {
         Page<SuspectResponse> p = suspectService.list(query, status, pageable);

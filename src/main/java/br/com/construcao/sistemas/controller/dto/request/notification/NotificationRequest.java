@@ -15,5 +15,6 @@ public class NotificationRequest {
     private String topic;
     private String title;
     private String body;
+    private String route;
     private Map<String, String> data;
 }

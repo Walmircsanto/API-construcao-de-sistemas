@@ -13,6 +13,7 @@ import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
+import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.SuspectRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -127,7 +128,7 @@ class SuspectServiceTest {
     @Test
     void testListService() {
         String query = "john";
-        EnumStatus status = EnumStatus.ATIVO;
+        SuspectStatus status = SuspectStatus.FORAGIDO;
         Pageable pageable = PageRequest.of(0, 10);
 
         Suspect s = new Suspect();

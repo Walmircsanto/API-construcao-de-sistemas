@@ -6,6 +6,7 @@ import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
+import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import br.com.construcao.sistemas.service.SuspectService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,7 +69,7 @@ class SuspectsControllerTest {
     @Test
     void testListController() {
         String query = "john";
-        EnumStatus status = EnumStatus.ATIVO;
+        SuspectStatus status = SuspectStatus.FORAGIDO;
         Pageable pageable = PageRequest.of(0, 20);
 
         Page<SuspectResponse> page = new PageImpl<>(List.of(new SuspectResponse()));

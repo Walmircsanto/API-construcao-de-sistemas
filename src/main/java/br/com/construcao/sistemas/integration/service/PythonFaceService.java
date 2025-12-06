@@ -4,7 +4,10 @@ import br.com.construcao.sistemas.controller.dto.request.suspect.CreateSuspectRe
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.integration.dto.*;
 import br.com.construcao.sistemas.integration.dto.suspect.ResponseSearchSuspect;
+
 import br.com.construcao.sistemas.model.Suspect;
+import br.com.construcao.sistemas.repository.SuspectRepository;
+import br.com.construcao.sistemas.service.SuspectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -18,12 +21,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class PythonFaceService {
 
     private final RestTemplate restTemplate;
+    private final SuspectRepository  suspectRepository;
 
     @Value("${nexus.python.base-url}")
     private String baseUrl;
@@ -139,7 +145,7 @@ public class PythonFaceService {
 
 
 
-    public FaceSearchResponse buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
+    public ResponseSearchSuspect buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -161,7 +167,8 @@ public class PythonFaceService {
                     FaceSearchResponse.class
             );
 
-            return response.getBody();
+            String metadata = response.getBody().getMatches().get(0).getMetadata();
+            return responseSearchSuspect(metadata);
         } catch (IOException e) {
             throw new InternalServerErrorException(
                     "Erro ao processar imagem: " + e.getMessage(),
@@ -177,11 +184,16 @@ public class PythonFaceService {
 
     private ResponseSearchSuspect responseSearchSuspect(String metadata){
      String documento = metadata.split(":")[1];
-        Suspect suspect = this.suspectService.findByDocumentSuspect(documento).get();
+        Suspect suspect = this.suspectRepository.findByCpf(metadata).get();
 
         ResponseSearchSuspect response = new ResponseSearchSuspect();
 
+         response.setBirthday(suspect.getBirthDate());
+         response.setName(suspect.getName());
+         response.setStatus(suspect.getSuspectStatus());
+         response.setHours(LocalTime.now().toString());
 
+         return response;
 
     }
 

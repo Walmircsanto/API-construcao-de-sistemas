@@ -2,17 +2,13 @@ package br.com.construcao.sistemas.integration.service;
 
 import br.com.construcao.sistemas.controller.dto.request.suspect.CreateSuspectRequest;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
-import br.com.construcao.sistemas.integration.dto.FaceRegisterRequest;
-import br.com.construcao.sistemas.integration.dto.FaceRegisterResponse;
-import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
-import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
+import br.com.construcao.sistemas.integration.dto.*;
+import br.com.construcao.sistemas.integration.dto.suspect.ResponseSearchSuspect;
+import br.com.construcao.sistemas.model.Suspect;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -20,6 +16,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 
 @Service
@@ -101,9 +98,9 @@ public class PythonFaceService {
 
     /**
      * Converte:
-     * https://apijava-qrcode.s3.us-west-1.amazonaws.com/João Gabriel.png_1763379626900
+     *  https://apijava-qrcode.s3.us-west-1.amazonaws.com/João Gabriel.png_1763379626900
      * em:
-     * s3://apijava-qrcode/João Gabriel.png_1763379626900
+     *  s3://apijava-qrcode/João Gabriel.png_1763379626900
      */
     private String toS3Path(String url) {
         if (url == null || url.isBlank()) {
@@ -141,6 +138,7 @@ public class PythonFaceService {
     }
 
 
+
     public FaceSearchResponse buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -175,6 +173,16 @@ public class PythonFaceService {
                     e
             );
         }
+    }
+
+    private ResponseSearchSuspect responseSearchSuspect(String metadata){
+     String documento = metadata.split(":")[1];
+        Suspect suspect = this.suspectService.findByDocumentSuspect(documento).get();
+
+        ResponseSearchSuspect response = new ResponseSearchSuspect();
+
+
+
     }
 
     public FaceSearchResponse buscarSuspeitosPorS3(String imageUrl, Integer topK) {

@@ -11,6 +11,7 @@ import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
+import br.com.construcao.sistemas.integration.dto.suspect.SuspectData;
 import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
@@ -30,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -47,12 +49,14 @@ public class SuspectService {
 
         Suspect suspectData = mapper.mapTo(req, Suspect.class);
         suspectData = suspectRepository.save(suspectData);
-
         try {
             Image perfil = null;
 
             if (!file.isEmpty()) {
                 perfil = salvarImagemDoSuspect(suspectData, file);
+                SuspectData suspectRequest = new SuspectData(req.getCpf(),suspectData.getId());
+                //mudar o req para o caminho no bucket S3 gerado
+                pythonFaceService.registrarFaceSuspeito(suspectData.getId(),perfil.getUrl(), req);
 
                 String jobId = pythonFaceService.registrarFaceSuspeito(
                         suspectData.getId(),
@@ -69,6 +73,7 @@ public class SuspectService {
         } catch (Exception e) {
             throw new InternalServerErrorException("Erro ao criar suspect " + e.getMessage());
         }
+
     }
 
     @Transactional(readOnly = true)
@@ -90,7 +95,6 @@ public class SuspectService {
                 .orElseThrow(() -> new NotFoundException("Suspeito não encontrado"));
 
         if (req.getName() != null) s.setName(req.getName());
-        if (req.getBirthDate() != null) s.setBirthDate(req.getBirthDate());
         if (req.getDescription() != null) s.setDescription(req.getDescription());
         if (req.getSuspectStatus() != null) s.setSuspectStatus(req.getSuspectStatus());
 
@@ -144,6 +148,10 @@ public class SuspectService {
         if (suspectRepository.existsByCpf(cpf)) {
             throw new ConflictException("CPF já cadastrado");
         }
+    }
+
+    public Optional<Suspect> findByDocumentSuspect(String documentSuspect){
+     return  this.suspectRepository.findByCpf(documentSuspect);
     }
 
     private Image salvarImagemDoSuspect(Suspect suspect, MultipartFile file) throws IOException {

@@ -9,6 +9,7 @@ import br.com.construcao.sistemas.model.Incident;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.User;
+import br.com.construcao.sistemas.model.enums.IncidentStatus;
 import br.com.construcao.sistemas.repository.IncidentRepository;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.SuspectRepository;
@@ -37,25 +38,6 @@ public class IncidentService {
         
         Image image = imageRepository.findById(request.getImageId())
                 .orElseThrow(() -> new RuntimeException("Image not found"));
-
-        Incident incident = Incident.builder()
-                .suspect(suspect)
-                .image(image)
-                .score(request.getScore())
-                .location(request.getLocation())
-                .notes(request.getNotes())
-                .build();
-
-        incidentRepository.save(incident);
-
-        NotificationRequest notification = NotificationRequest.builder()
-                .title("Novo Incidente Detectado")
-                .body(String.format("Suspeito %s detectado com %.2f%% de confiança", 
-                        suspect.getName(), request.getScore() * 100))
-                .topic("incidents")
-                .build();
-        
-        notificationProducer.enqueueToTopic(notification);
     }
 
     public Page<IncidentResponse> findAll(Pageable pageable) {
@@ -90,6 +72,18 @@ public class IncidentService {
         }
 
         return toResponse(incidentRepository.save(incident));
+    }
+
+    @Transactional
+    public void updateStatusIncident(Long id, IncidentStatus status) {
+        Incident incident = incidentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Incident not found"));
+
+        if(status != null) {
+         incident.setIncidentStatus(status);
+        }
+
+        this.incidentRepository.save(incident);
     }
 
     @Transactional

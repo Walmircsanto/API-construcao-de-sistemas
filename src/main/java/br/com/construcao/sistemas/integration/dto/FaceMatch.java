@@ -8,4 +8,5 @@ public class FaceMatch {
     private Long suspect_id;
     private Double distance;
     private String metadata;
+    private String s3_path;
 }

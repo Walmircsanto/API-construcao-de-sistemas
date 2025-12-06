@@ -11,6 +11,7 @@ import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
 import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
+import br.com.construcao.sistemas.integration.dto.suspect.ResponseSearchSuspect;
 import br.com.construcao.sistemas.integration.dto.suspect.SuspectData;
 import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
@@ -130,7 +131,7 @@ public class SuspectService {
     }
 
     @Transactional
-    public FaceSearchResponse buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
+    public ResponseSearchSuspect buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
         if (image == null || image.isEmpty()) {
             throw new RuntimeException("image not found");
         }
@@ -148,10 +149,6 @@ public class SuspectService {
         if (suspectRepository.existsByCpf(cpf)) {
             throw new ConflictException("CPF já cadastrado");
         }
-    }
-
-    public Optional<Suspect> findByDocumentSuspect(String documentSuspect){
-     return  this.suspectRepository.findByCpf(documentSuspect);
     }
 
     private Image salvarImagemDoSuspect(Suspect suspect, MultipartFile file) throws IOException {

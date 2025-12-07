@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/nexus/incidents/**").permitAll()
                         .requestMatchers("/api/nexus/suspects/**").hasRole("ADMIN")
                         .requestMatchers("/api/nexus/webhooks/**").permitAll()
+                        .requestMatchers("/api/nexus/reports/access-logs/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

@@ -80,7 +80,7 @@ public class FaceProcessingWebhookController {
             ));
 
             if (s3Path != null && !s3Path.isEmpty()) {
-                String imageUrl = convertS3PathToUrl(s3Path);
+                String imageUrl = s3Path;
                 notification.setImage(imageUrl);
             }
 

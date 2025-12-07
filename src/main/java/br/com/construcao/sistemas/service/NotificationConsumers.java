@@ -20,15 +20,32 @@ public class NotificationConsumers {
 
     @RabbitListener(queues = "${notifications.queues.user}")
     public void onUserFanout(NotificationRequest payload) {
-        var r = push.sendToUserIds(payload.getUserIds(), payload.getTitle(), payload.getBody(), payload.getData());
+        var r = push.sendToUserIds(
+                payload.getUserIds(),
+                payload.getTitle(),
+                payload.getBody(),
+                payload.getTarget(),
+                payload.getId(),
+                payload.getAction(),
+                payload.getImage(),
+                payload.getData()
+        );
         log.info("FCM user fanout: requested={}, success={}, failure={}", r.getRequested(), r.getSuccess(), r.getFailure());
     }
-
 
     @RabbitListener(queues = "${notifications.queues.topic}")
     public void onTopic(NotificationRequest payload) {
         if (payload.getTopic() == null || payload.getTopic().isBlank()) return;
-        push.sendToTopic(payload.getTopic(), payload.getTitle(), payload.getBody(), payload.getData());
+        push.sendToTopic(
+                payload.getTopic(),
+                payload.getTitle(),
+                payload.getBody(),
+                payload.getTarget(),
+                payload.getId(),
+                payload.getAction(),
+                payload.getImage(),
+                payload.getData()
+        );
         log.info("FCM topic sent: topic={}", payload.getTopic());
     }
 

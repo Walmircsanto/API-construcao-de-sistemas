@@ -10,6 +10,7 @@ import com.google.firebase.messaging.MessagingErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -53,6 +54,10 @@ class PushNotificationServiceTest {
                 List.of(1L, 2L),
                 "Título",
                 "Corpo",
+                "SUSPECT",
+                "12345678900",
+                "refresh_list",
+                "https://example.com/image.jpg",
                 Map.of("a", "1")
         );
 
@@ -82,6 +87,10 @@ class PushNotificationServiceTest {
                 List.of(10L),
                 "Título",
                 "Corpo",
+                "SUSPECT",
+                "12345678900",
+                "refresh_list",
+                null,
                 null
         );
 
@@ -104,7 +113,7 @@ class PushNotificationServiceTest {
         when(userRepo.findAllById(List.of(10L))).thenReturn(List.of(u));
 
         FirebaseMessagingException ex = mock(FirebaseMessagingException.class);
-        when(ex.getMessagingErrorCode()).thenReturn(MessagingErrorCode.UNREGISTERED);
+        when(ex.getMessagingErrorCode()).thenReturn(MessagingErrorCode.INTERNAL);
 
         when(firebase.send(any(Message.class))).thenThrow(ex);
 
@@ -112,6 +121,10 @@ class PushNotificationServiceTest {
                 List.of(10L),
                 "Título",
                 "Corpo",
+                "SUSPECT",
+                "12345678900",
+                "refresh_list",
+                null,
                 null
         );
 
@@ -135,6 +148,10 @@ class PushNotificationServiceTest {
                 List.of(1L,2L,3L),
                 "Título",
                 "Corpo",
+                "SUSPECT",
+                "12345678900",
+                "refresh_list",
+                null,
                 null
         );
 
@@ -142,13 +159,22 @@ class PushNotificationServiceTest {
         assertEquals(1, resp.getSuccess());
         assertEquals(0, resp.getFailure());
 
-
         verify(firebase, times(1)).send(any());
     }
 
     @Test
     void testSendToTopic_Sucesso() throws Exception {
-        service.sendToTopic("news", "Hi", "Body", Map.of("x", "1"));
+        service.sendToTopic(
+                "news",
+                "Hi",
+                "Body",
+                "ALERT",
+                "alert-123",
+                "show_alert",
+                "https://example.com/image.jpg",
+                Map.of("x", "1")
+        );
+
         verify(firebase).send(any(Message.class));
     }
 
@@ -158,7 +184,41 @@ class PushNotificationServiceTest {
         when(firebase.send(any(Message.class))).thenThrow(ex);
 
         assertDoesNotThrow(() ->
-                service.sendToTopic("topic", "T", "B", null)
+                service.sendToTopic(
+                        "topic",
+                        "T",
+                        "B",
+                        "ALERT",
+                        "alert-123",
+                        "show_alert",
+                        null,
+                        null
+                )
         );
+    }
+
+    @Test
+    void testSendToUserIds_ComDataMessage_TodosCampos() throws Exception {
+        User u = new User();
+        u.setFcmToken("token123");
+
+        when(userRepo.findAllById(List.of(1L))).thenReturn(List.of(u));
+
+        NotificationResponse resp = service.sendToUserIds(
+                List.of(1L),
+                "Novo Suspeito",
+                "João Silva foi cadastrado",
+                "SUSPECT",
+                "12345678900",
+                "refresh_list",
+                "https://example.com/foto.jpg",
+                Map.of("extra", "data")
+        );
+
+        assertEquals(1, resp.getRequested());
+        assertEquals(1, resp.getSuccess());
+        assertEquals(0, resp.getFailure());
+
+        verify(firebase).send(any(Message.class));
     }
 }

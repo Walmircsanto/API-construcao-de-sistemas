@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,16 @@ public class PushNotificationService {
     @Value("${notifications.fcm.chunk-size:500}")
     private int chunkSize;
 
-    public NotificationResponse sendToUserIds(Collection<Long> userIds, String title, String body, Map<String, String> data) {
+    public NotificationResponse sendToUserIds(
+            Collection<Long> userIds,
+            String title,
+            String body,
+            String target,
+            String id,
+            String action,
+            String image,
+            Map<String, String> data
+    ) {
         List<String> tokens = users.findAllById(userIds).stream()
                 .map(User::getFcmToken)
                 .filter(t -> t != null && !t.isBlank())
@@ -34,13 +44,29 @@ public class PushNotificationService {
         int requested = tokens.size(), success = 0, failure = 0;
 
         for (String tk : tokens) {
-            Message.Builder mb = Message.builder()
+            Map<String, String> dataPayload = new HashMap<>();
+            dataPayload.put("title", title != null ? title : "");
+            dataPayload.put("body", body != null ? body : "");
+            dataPayload.put("target", target != null ? target : "unknown");
+            dataPayload.put("id", id != null ? id : "");
+            dataPayload.put("action", action != null ? action : "");
+            dataPayload.put("click_action", "FLUTTER_NOTIFICATION_CLICK");
+
+            if (image != null && !image.isBlank()) {
+                dataPayload.put("image", image);
+            }
+
+            if (data != null && !data.isEmpty()) {
+                dataPayload.putAll(data);
+            }
+
+            Message message = Message.builder()
                     .setToken(tk)
-                    .setNotification(Notification.builder().setTitle(title).setBody(body).build());
-            if (data != null && !data.isEmpty()) mb.putAllData(data);
+                    .putAllData(dataPayload)
+                    .build();
 
             try {
-                firebase.send(mb.build());
+                firebase.send(message);
                 success++;
             } catch (FirebaseMessagingException e) {
                 failure++;
@@ -57,15 +83,42 @@ public class PushNotificationService {
         return new NotificationResponse(requested, success, failure);
     }
 
+    public void sendToTopic(
+            String topic,
+            String title,
+            String body,
+            String target,
+            String id,
+            String action,
+            String image,
+            Map<String, String> data
+    ) {
+        Map<String, String> dataPayload = new HashMap<>();
+        dataPayload.put("title", title != null ? title : "");
+        dataPayload.put("body", body != null ? body : "");
+        dataPayload.put("target", target != null ? target : "unknown");
+        dataPayload.put("id", id != null ? id : "");
+        dataPayload.put("action", action != null ? action : "");
+        dataPayload.put("click_action", "FLUTTER_NOTIFICATION_CLICK");
 
-    public void sendToTopic(String topic, String title, String body, Map<String, String> data) {
-        Message.Builder mb = Message.builder()
+        if (image != null && !image.isBlank()) {
+            dataPayload.put("image", image);
+        }
+
+        if (data != null && !data.isEmpty()) {
+            dataPayload.putAll(data);
+        }
+
+        Message message = Message.builder()
                 .setTopic(topic)
-                .setNotification(Notification.builder().setTitle(title).setBody(body).build());
-        if (data != null && !data.isEmpty()) mb.putAllData(data);
+                .putAllData(dataPayload)
+                .build();
+
         try {
-            firebase.send(mb.build());
+            firebase.send(message);
+            log.info("✅ Notificação enviada para tópico: {}", topic);
         } catch (FirebaseMessagingException e) {
+            log.error("❌ Erro ao enviar notificação para tópico {}: {}", topic, e.getMessage(), e);
         }
     }
 }

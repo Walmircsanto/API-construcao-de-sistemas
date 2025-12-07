@@ -15,6 +15,9 @@ public class NotificationRequest {
     private String topic;
     private String title;
     private String body;
-    private String route;
+    private String image;
+    private String target;
+    private String id;
+    private String action;
     private Map<String, String> data;
 }

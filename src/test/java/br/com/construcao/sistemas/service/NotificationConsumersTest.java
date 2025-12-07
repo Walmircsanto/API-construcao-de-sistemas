@@ -4,17 +4,21 @@ import br.com.construcao.sistemas.controller.dto.request.notification.Notificati
 import br.com.construcao.sistemas.controller.dto.response.notification.NotificationResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class NotificationConsumersTest {
 
     @Mock
@@ -23,21 +27,21 @@ class NotificationConsumersTest {
     @InjectMocks
     private NotificationConsumers consumers;
 
-    @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
     void testDeveEnviarParaUsuarios_quandoForUserFanout() {
         NotificationRequest req = new NotificationRequest();
         req.setUserIds(List.of(1L, 2L));
         req.setTitle("Hello");
         req.setBody("World");
+        req.setTarget("SUSPECT");
+        req.setId("12345678900");
+        req.setAction("refresh_list");
+        req.setImage("https://example.com/image.jpg");
         req.setData(Map.of("k", "v"));
 
         NotificationResponse result = new NotificationResponse(2, 2, 0);
-        when(push.sendToUserIds(any(), any(), any(), any())).thenReturn(result);
+        when(push.sendToUserIds(any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(result);
 
         consumers.onUserFanout(req);
 
@@ -45,6 +49,10 @@ class NotificationConsumersTest {
                 eq(List.of(1L, 2L)),
                 eq("Hello"),
                 eq("World"),
+                eq("SUSPECT"),
+                eq("12345678900"),
+                eq("refresh_list"),
+                eq("https://example.com/image.jpg"),
                 eq(Map.of("k", "v"))
         );
     }
@@ -55,20 +63,34 @@ class NotificationConsumersTest {
         req.setTopic("promo");
         req.setTitle("Title");
         req.setBody("Body");
+        req.setTarget("ALERT");
+        req.setId("alert-123");
+        req.setAction("show_alert");
+        req.setImage(null);
         req.setData(Map.of("x", "y"));
 
         consumers.onTopic(req);
 
-        verify(push).sendToTopic("promo", "Title", "Body", Map.of("x", "y"));
+        verify(push).sendToTopic(
+                eq("promo"),
+                eq("Title"),
+                eq("Body"),
+                eq("ALERT"),
+                eq("alert-123"),
+                eq("show_alert"),
+                isNull(),
+                eq(Map.of("x", "y"))
+        );
     }
 
     @Test
     void testNaoDeveEnviarParaTopico_quandoTopicoVazio() {
         NotificationRequest req = new NotificationRequest();
         req.setTopic("   ");
+
         consumers.onTopic(req);
 
-        verify(push, never()).sendToTopic(any(), any(), any(), any());
+        verify(push, never()).sendToTopic(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -78,7 +100,7 @@ class NotificationConsumersTest {
 
         consumers.onTopic(req);
 
-        verify(push, never()).sendToTopic(any(), any(), any(), any());
+        verify(push, never()).sendToTopic(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -86,7 +108,7 @@ class NotificationConsumersTest {
         NotificationRequest req = new NotificationRequest();
         req.setTitle("Error User");
 
-        consumers.onUserDlq(req);
+        assertDoesNotThrow(() -> consumers.onUserDlq(req));
     }
 
     @Test
@@ -94,6 +116,6 @@ class NotificationConsumersTest {
         NotificationRequest req = new NotificationRequest();
         req.setTitle("Error Topic");
 
-        consumers.onTopicDlq(req);
+        assertDoesNotThrow(() -> consumers.onTopicDlq(req));
     }
 }

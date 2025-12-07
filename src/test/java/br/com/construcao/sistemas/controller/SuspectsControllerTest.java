@@ -76,11 +76,11 @@ class SuspectsControllerTest {
 
         when(suspectService.list(query, status, pageable)).thenReturn(page);
 
-        ResponseEntity<PageResponse<SuspectResponse>> response =
+        ResponseEntity<Page<SuspectResponse>> response =
                 controller.list(query, status, pageable);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(page.getContent(), response.getBody().getItems());
+        assertEquals(page.getContent(), response.getBody());
         verify(suspectService, times(1)).list(query, status, pageable);
     }
 

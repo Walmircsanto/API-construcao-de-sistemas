@@ -18,15 +18,15 @@ public interface SuspectRepository extends JpaRepository<Suspect, Long> {
     Optional<Suspect> findByCpf(String cpf);
 
     @Query("""
-            SELECT u FROM Suspect u
-            WHERE (:status IS NULL OR u.status = :status)
-              AND (
-                   :query IS NULL OR :query = '' OR
-                   u.name  ILIKE CONCAT('%', :query, '%') OR
-                   u.cpf ILIKE CONCAT('%', :query, '%')
-              )
-            """)
+    SELECT u FROM Suspect u
+    WHERE (:suspectStatus IS NULL OR u.suspectStatus = :suspectStatus)
+      AND (
+           :query IS NULL OR :query = '' OR
+           u.name ILIKE CONCAT('%', :query, '%') OR
+           u.cpf ILIKE CONCAT('%', :query, '%')
+      )
+    """)
     Page<Suspect> findAllByFilters(@Param("query") String query,
-                                   @Param("status") SuspectStatus status,
+                                   @Param("suspectStatus") SuspectStatus suspectStatus,
                                    Pageable pageable);
 }

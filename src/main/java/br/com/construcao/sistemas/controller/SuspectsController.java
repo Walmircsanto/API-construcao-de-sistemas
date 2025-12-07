@@ -93,18 +93,18 @@ public class SuspectsController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "Lista de suspeitos retornada.",
-                            content = @Content(schema = @Schema(implementation = PageResponse.class))
+                            content = @Content(schema = @Schema(implementation = Page.class))
                     )
             }
     )
     @GetMapping
-    public ResponseEntity<PageResponse<SuspectResponse>> list(
+    public ResponseEntity<Page<SuspectResponse>> list(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) SuspectStatus status,
             Pageable pageable
     ) {
         Page<SuspectResponse> p = suspectService.list(query, status, pageable);
-        return ResponseEntity.ok(PageResponse.of(p));
+        return ResponseEntity.ok(p);
     }
 
     @Operation(

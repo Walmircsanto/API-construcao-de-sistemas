@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalTime;
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -60,47 +61,7 @@ public class PythonFaceService {
         }
     }
 
-//    public void registrarSuspeitoImagem(SuspectData suspectData, MultipartFile image, String s3Path){
-//
-//        try {
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//
-//            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-//            body.add("suspect_id", suspectData.getSuspectId().toString());
-//            body.add("s3_path", s3Path);
-//            body.add("cpf", suspectData.getCpfSuspect());
-//
-//            // Arquivo: MultipartFile -> ByteArrayResource
-//            ByteArrayResource imageRequest = new ByteArrayResource(image.getBytes()) {
-//                @Override
-//                public String getFilename() {
-//                    return image.getOriginalFilename();
-//                }
-//            };
-//            body.add("image", imageRequest);
-//
-//            System.out.println("Enviando requisição para API Python...");
-//            HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
-//
-//            ResponseEntity<Void> response = restTemplate.postForEntity(
-//                    baseUrl + "/faces/register",
-//                    request,
-//                    Void.class
-//            );
-//
-//            System.out.println("Resposta da API Python: " + response.getStatusCode());
-//
-//        } catch (RestClientException e) {
-//            System.err.println("Erro de comunicação com API Python: " + e.getMessage());
-//            e.printStackTrace();
-//            throw new InternalServerErrorException(
-//                    "Falha ao registrar face no serviço Python: " + e.getMessage());
-//        } catch (IOException e) {
-//            System.err.println("Erro ao processar arquivo: " + e.getMessage());
-//            throw new InternalServerErrorException("Erro ao processar arquivo de imagem: " + e.getMessage());
-//        }
-//    }
+
 
     /**
      * Converte:
@@ -145,8 +106,11 @@ public class PythonFaceService {
 
 
 
-    public ResponseSearchSuspect buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
+    public ResponseSearchSuspect buscarSuspeitosPorImagem(MultipartFile image, Integer topK, String processed_url) {
+
         try {
+
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -167,8 +131,9 @@ public class PythonFaceService {
                     FaceSearchResponse.class
             );
 
-            String metadata = response.getBody().getMatches().get(0).getMetadata();
-            return responseSearchSuspect(metadata);
+            FaceSearchResponse searchResponse = response.getBody();
+
+            return responseSearchSuspect(searchResponse, processed_url);
         } catch (IOException e) {
             throw new InternalServerErrorException(
                     "Erro ao processar imagem: " + e.getMessage(),
@@ -182,19 +147,25 @@ public class PythonFaceService {
         }
     }
 
-    private ResponseSearchSuspect responseSearchSuspect(String metadata){
-     String documento = metadata.split(":")[1];
-        Suspect suspect = this.suspectRepository.findByCpf(metadata).get();
+    private ResponseSearchSuspect responseSearchSuspect(FaceSearchResponse searchResponse, String processed_url){
+        FaceMatch match = searchResponse.getMatches().get(0);
+        String cpf = match.getMetadata();
+        
+        Suspect suspect = this.suspectRepository.findByCpf(cpf)
+                .orElseThrow(() -> new InternalServerErrorException("Suspeito não encontrado"));
 
         ResponseSearchSuspect response = new ResponseSearchSuspect();
+        response.setName(suspect.getName());
+        response.setBirthday(suspect.getBirthDate());
+        response.setStatus(suspect.getSuspectStatus());
+        response.setProcessedUrl(processed_url);
 
-         response.setBirthday(suspect.getBirthDate());
-         response.setName(suspect.getName());
-         response.setStatus(suspect.getSuspectStatus());
-         response.setHours(LocalTime.now().toString());
-
-         return response;
-
+        
+        // Dados de detecção do Python ou valores padrão
+        response.setDetectionLocation(match.getDetection_location() != null ? match.getDetection_location() : "Câmera 05");
+        response.setDetectionDate(match.getDetection_date() != null ? match.getDetection_date() : LocalDate.now().toString());
+        response.setHorsDetection(match.getDetection_time() != null ? match.getDetection_time() : LocalTime.now().toString());
+        return response;
     }
 
     public FaceSearchResponse buscarSuspeitosPorS3(String imageUrl, Integer topK) {

@@ -108,6 +108,7 @@ public class SuspectService {
         return montarResponseComImagens(s);
     }
 
+
     @Transactional
     public void delete(Long id) {
         if (!suspectRepository.existsById(id)) throw new NotFoundException("Suspeito não encontrado");
@@ -131,11 +132,13 @@ public class SuspectService {
     }
 
     @Transactional
-    public ResponseSearchSuspect buscarSuspeitosPorImagem(MultipartFile image, Integer topK) {
+    public ResponseSearchSuspect buscarSuspeitosPorImagem(MultipartFile image, Integer topK) throws IOException {
         if (image == null || image.isEmpty()) {
             throw new RuntimeException("image not found");
         }
-        return this.pythonFaceService.buscarSuspeitosPorImagem(image, topK);
+        String processed_url = uploadFiles.putObject(image);
+
+        return this.pythonFaceService.buscarSuspeitosPorImagem(image, topK, processed_url);
 
     }
 

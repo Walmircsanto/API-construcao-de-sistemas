@@ -38,6 +38,27 @@ public class IncidentService {
         
         Image image = imageRepository.findById(request.getImageId())
                 .orElseThrow(() -> new RuntimeException("Image not found"));
+
+
+        Incident incident = Incident.builder()
+                .suspect(suspect)
+                .image(image)
+                .score(request.getScore())
+                .location(request.getLocation())
+                .notes(request.getNotes())
+                .processedUrl(request.getProcessedUrl())
+                .build();
+
+        incidentRepository.save(incident);
+
+        NotificationRequest notification = NotificationRequest.builder()
+                .title("Novo Incidente Detectado")
+                .body(String.format("Suspeito %s detectado com %.2f%% de confiança",
+                        suspect.getName(), request.getScore() * 100))
+                .topic("incidents")
+                .build();
+
+        notificationProducer.enqueueToTopic(notification);
     }
 
     public Page<IncidentResponse> findAll(Pageable pageable) {

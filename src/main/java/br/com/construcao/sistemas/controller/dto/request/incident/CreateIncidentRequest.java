@@ -25,4 +25,5 @@ public class CreateIncidentRequest {
     
     private String location;
     private String notes;
+    private String processedUrl;
 }

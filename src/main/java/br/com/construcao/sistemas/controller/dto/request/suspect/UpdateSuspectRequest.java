@@ -1,13 +1,13 @@
 package br.com.construcao.sistemas.controller.dto.request.suspect;
 
 import br.com.construcao.sistemas.model.enums.SuspectStatus;
+import br.com.construcao.sistemas.model.enums.IncidentStatus;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -16,7 +16,8 @@ import java.time.LocalDate;
 public class UpdateSuspectRequest {
 
     private String name;
-    private LocalDate birthDate;
+    @Min(0)
+    private Integer age;
     private String cpf;
     @Size(max = 2000)
     private String description;

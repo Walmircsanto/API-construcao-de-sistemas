@@ -6,6 +6,7 @@ import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
+import br.com.construcao.sistemas.integration.dto.suspect.ResponseSearchSuspect;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import br.com.construcao.sistemas.service.SuspectService;
@@ -183,7 +184,7 @@ public class SuspectsController {
 //    }
 
     @PostMapping("/search-suspect")
-    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorFile(@RequestPart("image") MultipartFile file, @RequestPart("topK") Integer topK) {
+    public ResponseEntity<ResponseSearchSuspect> buscarSuspeitosPorFile(@RequestPart("image") MultipartFile file, @RequestPart("topK") Integer topK) {
         return ResponseEntity.ok(this.suspectService.buscarSuspeitosPorImagem(file, topK));
     }
 }

@@ -24,6 +24,7 @@ public class IncidentResponse {
     private IncidentStatus incidentStatus;
     private UserResponse assignedUser;
     private String notes;
+    private String processedUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

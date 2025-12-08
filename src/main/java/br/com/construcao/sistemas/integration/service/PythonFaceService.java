@@ -175,15 +175,53 @@ public class PythonFaceService {
         return response;
     }
 
-    public FaceSearchResponse buscarSuspeitosPorS3(String imageUrl, Integer topK) {
+    public AsyncFaceSearchResponse buscarSuspeitosPorS3Async(String imageUrl, Integer topK) {
         String s3Path = toS3Path(imageUrl);
 
-        FaceSearchRequest request = new FaceSearchRequest(topK, s3Path);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("s3_path", s3Path);
+        body.add("top_k", topK);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+
+
+        try {
+            ResponseEntity<AsyncFaceSearchResponse> response = restTemplate.postForEntity(
+                    baseUrl + "/faces/search",
+                    requestEntity,
+                    AsyncFaceSearchResponse.class
+            );
+
+            return response.getBody();
+        } catch (RestClientException e) {
+            throw new InternalServerErrorException(
+                    "Falha ao buscar suspeitos no serviço Python: " + e.getMessage(),
+                    e
+            );
+        }
+    }
+
+    public FaceSearchResponse buscarSuspeitosPorS3(String imageUrl, Integer topK) {
+        String s3Path = toS3Path(imageUrl);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("s3_path", s3Path);
+        body.add("top_k", topK);
+
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         try {
             ResponseEntity<FaceSearchResponse> response = restTemplate.postForEntity(
                     baseUrl + "/faces/search",
-                    request,
+                    requestEntity,
                     FaceSearchResponse.class
             );
 

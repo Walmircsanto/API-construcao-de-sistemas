@@ -5,6 +5,8 @@ import br.com.construcao.sistemas.controller.dto.request.suspect.UpdateSuspectRe
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
+import br.com.construcao.sistemas.integration.dto.AsyncFaceSearchResponse;
+import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import br.com.construcao.sistemas.integration.dto.suspect.ResponseSearchSuspect;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
@@ -178,10 +180,22 @@ public class SuspectsController {
     }
 
 
-//    @PostMapping("/search-suspect")
-//    public ResponseEntity<FaceSearchResponse> buscarSuspeitosPorS3(@RequestBody FaceSearchRequest requestFace){
-//        return new ResponseEntity<>(this.suspectService.buscarSuspeitosPorS3(requestFace), HttpStatus.OK );
-//    }
+    @Operation(
+            summary = "Busca suspeitos por imagem via S3 (processamento assíncrono)",
+            description = "Envia uma requisição para busca de suspeitos usando caminho S3. Retorna job_id para acompanhar o processamento.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202",
+                            description = "Busca enviada para processamento assíncrono.",
+                            content = @Content(schema = @Schema(implementation = AsyncFaceSearchResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "400", description = "Dados de requisição inválidos.")
+            }
+    )
+    @PostMapping("/search-suspect-s3")
+    public ResponseEntity<AsyncFaceSearchResponse> buscarSuspeitosPorS3(@RequestBody FaceSearchRequest requestFace){
+        return ResponseEntity.accepted().body(this.suspectService.buscarSuspeitosPorS3Async(requestFace));
+    }
 
     @PostMapping("/search-suspect")
     public ResponseEntity<ResponseSearchSuspect> buscarSuspeitosPorFile(@RequestPart("image") MultipartFile file, @RequestPart("topK") Integer topK) throws IOException {

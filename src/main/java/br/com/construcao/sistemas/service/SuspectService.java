@@ -9,6 +9,7 @@ import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectRespons
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.exception.ConflictException;
 import br.com.construcao.sistemas.exception.InternalServerErrorException;
+import br.com.construcao.sistemas.integration.dto.AsyncFaceSearchResponse;
 import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import br.com.construcao.sistemas.integration.dto.suspect.ResponseSearchSuspect;
@@ -146,7 +147,10 @@ public class SuspectService {
 
     public FaceSearchResponse buscarSuspeitosPorS3(FaceSearchRequest request) {
         return this.pythonFaceService.buscarSuspeitosPorS3(request.getS3Path(), request.getTopK());
+    }
 
+    public AsyncFaceSearchResponse buscarSuspeitosPorS3Async(FaceSearchRequest request) {
+        return this.pythonFaceService.buscarSuspeitosPorS3Async(request.getS3Path(), request.getTopK());
     }
 
 

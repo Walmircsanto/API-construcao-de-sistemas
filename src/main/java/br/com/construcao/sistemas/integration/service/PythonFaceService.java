@@ -37,16 +37,23 @@ public class PythonFaceService {
 
     public String registrarFaceSuspeito(Long suspectId, String imageUrl, CreateSuspectRequest metadata) {
         String s3Path = toS3Path(imageUrl);
-        FaceRegisterRequest body = new FaceRegisterRequest(
-                suspectId,
-                s3Path,
-                metadata.getCpf()
-        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("suspect_id", suspectId);
+        body.add("s3_path", s3Path);
+        body.add("metadata", metadata);
+
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
 
         try {
             ResponseEntity<FaceRegisterResponse> response = restTemplate.postForEntity(
                     baseUrl + "/faces/register",
-                    body,
+                    requestEntity,
                     FaceRegisterResponse.class
             );
 

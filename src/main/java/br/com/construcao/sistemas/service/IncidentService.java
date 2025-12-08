@@ -49,6 +49,7 @@ public class IncidentService {
                 .processedUrl(request.getProcessedUrl())
                 .build();
 
+        incident.setIncidentStatus(IncidentStatus.ABERTO);
         incidentRepository.save(incident);
 
         NotificationRequest notification = NotificationRequest.builder()

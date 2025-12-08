@@ -139,6 +139,7 @@ public class SuspectService {
         }
         String processed_url = uploadFiles.putObject(image);
 
+        if(processed_url == null) throw new BadRequestException("Failed processing image");
         return this.pythonFaceService.buscarSuspeitosPorImagem(image, topK, processed_url);
 
     }

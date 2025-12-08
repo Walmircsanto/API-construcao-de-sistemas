@@ -184,7 +184,7 @@ public class SuspectsController {
 //    }
 
     @PostMapping("/search-suspect")
-    public ResponseEntity<ResponseSearchSuspect> buscarSuspeitosPorFile(@RequestPart("image") MultipartFile file, @RequestPart("topK") Integer topK) {
+    public ResponseEntity<ResponseSearchSuspect> buscarSuspeitosPorFile(@RequestPart("image") MultipartFile file, @RequestPart("topK") Integer topK) throws IOException {
         return ResponseEntity.ok(this.suspectService.buscarSuspeitosPorImagem(file, topK));
     }
 }

@@ -13,12 +13,10 @@ import br.com.construcao.sistemas.integration.dto.AsyncFaceSearchResponse;
 import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
 import br.com.construcao.sistemas.integration.dto.suspect.ResponseSearchSuspect;
-import br.com.construcao.sistemas.integration.dto.suspect.SuspectData;
 import br.com.construcao.sistemas.integration.service.PythonFaceService;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.enums.EnumProcessingStatus;
-import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import br.com.construcao.sistemas.repository.ImageRepository;
@@ -34,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +42,6 @@ public class SuspectService {
     private final MyModelMapper mapper;
     private final UploadFiles uploadFiles;
     private final PythonFaceService pythonFaceService;
-    private final SearchResultService searchResultService;
 
     @Transactional
     public SuspectResponse create(CreateSuspectRequest req, @Nullable MultipartFile file) throws IOException {
@@ -53,13 +49,12 @@ public class SuspectService {
 
         Suspect suspectData = mapper.mapTo(req, Suspect.class);
         suspectData = suspectRepository.save(suspectData);
+
         try {
             Image perfil = null;
 
             if (!file.isEmpty()) {
                 perfil = salvarImagemDoSuspect(suspectData, file);
-                //mudar o req para o caminho no bucket S3 gerado
-                pythonFaceService.registrarFaceSuspeito(suspectData.getId(),perfil.getUrl(), req);
 
                 String jobId = pythonFaceService.registrarFaceSuspeito(
                         suspectData.getId(),
@@ -76,7 +71,6 @@ public class SuspectService {
         } catch (Exception e) {
             throw new InternalServerErrorException("Erro ao criar suspect " + e.getMessage());
         }
-
     }
 
     @Transactional(readOnly = true)
@@ -149,14 +143,8 @@ public class SuspectService {
         return this.pythonFaceService.buscarSuspeitosPorS3(request.getS3Path(), request.getTopK());
     }
 
-    public String buscarSuspeitosPorS3Async(MultipartFile file) throws IOException {
-        String suspectSearchUrl = uploadFiles.putObject(file);
-        String response = this.pythonFaceService.buscarSuspeitosPorS3Async(suspectSearchUrl,2);
-        
-
-        searchResultService.createPendingSearch(response);
-        
-        return response;
+    public AsyncFaceSearchResponse buscarSuspeitosPorS3Async(FaceSearchRequest request) {
+        return this.pythonFaceService.buscarSuspeitosPorS3Async(request.getS3Path(), request.getTopK());
     }
 
 

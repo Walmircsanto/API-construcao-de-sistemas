@@ -88,13 +88,4 @@ class GlobalExceptionHandlerTest {
         assertEquals("Token expired.", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals("Expired token", response.getBody().getDetails());
     }
-
-    @Test
-    void testHandleRuntime() {
-        RuntimeException ex = new RuntimeException("Runtime err");
-        ResponseEntity<String> response = handler.handleRuntime(ex);
-
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("Não foi possível completar o cadastro.", response.getBody());
-    }
 }

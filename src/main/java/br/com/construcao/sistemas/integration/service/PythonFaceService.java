@@ -175,20 +175,17 @@ public class PythonFaceService {
         return response;
     }
 
-    public AsyncFaceSearchResponse buscarSuspeitosPorS3Async(String imageUrl, Integer topK) {
+    public String buscarSuspeitosPorS3Async(String imageUrl, Integer topK) {
         String s3Path = toS3Path(imageUrl);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("s3_path", s3Path);
         body.add("top_k", topK);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-
 
         try {
             ResponseEntity<AsyncFaceSearchResponse> response = restTemplate.postForEntity(
@@ -197,7 +194,9 @@ public class PythonFaceService {
                     AsyncFaceSearchResponse.class
             );
 
-            return response.getBody();
+            System.out.println("Response: " +  response.getBody());
+            
+            return response.getBody().getRequestId();
         } catch (RestClientException e) {
             throw new InternalServerErrorException(
                     "Falha ao buscar suspeitos no serviço Python: " + e.getMessage(),

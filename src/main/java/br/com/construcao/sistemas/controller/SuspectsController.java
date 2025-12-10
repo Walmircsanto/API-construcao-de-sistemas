@@ -5,6 +5,8 @@ import br.com.construcao.sistemas.controller.dto.request.suspect.UpdateSuspectRe
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
+import br.com.construcao.sistemas.controller.dto.request.CompleteSearchRequest;
+import br.com.construcao.sistemas.controller.dto.response.SearchResultResponse;
 import br.com.construcao.sistemas.integration.dto.AsyncFaceSearchResponse;
 import br.com.construcao.sistemas.integration.dto.FaceSearchRequest;
 import br.com.construcao.sistemas.integration.dto.FaceSearchResponse;
@@ -12,6 +14,7 @@ import br.com.construcao.sistemas.integration.dto.suspect.ResponseSearchSuspect;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import br.com.construcao.sistemas.service.SuspectService;
+import br.com.construcao.sistemas.service.SearchResultService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -37,7 +40,7 @@ public class SuspectsController {
 
     private final SuspectService suspectService;
 
-    public SuspectsController(SuspectService suspectService) {
+    public SuspectsController(SuspectService suspectService, SearchResultService searchResultService) {
         this.suspectService = suspectService;
     }
 
@@ -193,8 +196,8 @@ public class SuspectsController {
             }
     )
     @PostMapping("/search-suspect-s3")
-    public ResponseEntity<AsyncFaceSearchResponse> buscarSuspeitosPorS3(@RequestBody FaceSearchRequest requestFace){
-        return ResponseEntity.accepted().body(this.suspectService.buscarSuspeitosPorS3Async(requestFace));
+    public ResponseEntity<String> buscarSuspeitosPorS3(@RequestPart("image") MultipartFile file) throws IOException {
+        return ResponseEntity.accepted().body(this.suspectService.buscarSuspeitosPorS3Async(file));
     }
 
     @PostMapping("/search-suspect")

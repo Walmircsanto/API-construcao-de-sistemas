@@ -45,6 +45,7 @@ public class SuspectService {
     private final MyModelMapper mapper;
     private final UploadFiles uploadFiles;
     private final PythonFaceService pythonFaceService;
+    private final SearchResultService searchResultService;
 
     @Transactional
     public SuspectResponse create(CreateSuspectRequest req, @Nullable MultipartFile file) throws IOException {
@@ -57,7 +58,6 @@ public class SuspectService {
 
             if (!file.isEmpty()) {
                 perfil = salvarImagemDoSuspect(suspectData, file);
-                SuspectData suspectRequest = new SuspectData(req.getCpf(),suspectData.getId());
                 //mudar o req para o caminho no bucket S3 gerado
                 pythonFaceService.registrarFaceSuspeito(suspectData.getId(),perfil.getUrl(), req);
 
@@ -149,8 +149,14 @@ public class SuspectService {
         return this.pythonFaceService.buscarSuspeitosPorS3(request.getS3Path(), request.getTopK());
     }
 
-    public AsyncFaceSearchResponse buscarSuspeitosPorS3Async(FaceSearchRequest request) {
-        return this.pythonFaceService.buscarSuspeitosPorS3Async(request.getS3Path(), request.getTopK());
+    public String buscarSuspeitosPorS3Async(MultipartFile file) throws IOException {
+        String suspectSearchUrl = uploadFiles.putObject(file);
+        String response = this.pythonFaceService.buscarSuspeitosPorS3Async(suspectSearchUrl,2);
+        
+
+        searchResultService.createPendingSearch(response);
+        
+        return response;
     }
 
 

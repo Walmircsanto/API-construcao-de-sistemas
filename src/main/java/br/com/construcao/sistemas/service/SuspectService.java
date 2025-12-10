@@ -4,6 +4,7 @@ package br.com.construcao.sistemas.service;
 import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
 import br.com.construcao.sistemas.controller.dto.request.suspect.CreateSuspectRequest;
 import br.com.construcao.sistemas.controller.dto.request.suspect.UpdateSuspectRequest;
+import br.com.construcao.sistemas.controller.dto.response.AsyncSearchResponse;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
@@ -134,24 +135,33 @@ public class SuspectService {
             throw new RuntimeException("image not found");
         }
         String processed_url = uploadFiles.putObject(image);
-
+        
         if(processed_url == null) throw new BadRequestException("Failed processing image");
-        return this.pythonFaceService.buscarSuspeitosPorImagem(image, topK, processed_url);
-
+        
+        // Salva a imagem de busca no banco
+        Image savedImage = salvarImagemDeBusca(image, processed_url);
+        
+        ResponseSearchSuspect response = this.pythonFaceService.buscarSuspeitosPorImagem(image, topK, processed_url);
+        response.setImageId(savedImage.getId());
+        
+        return response;
     }
 
     public FaceSearchResponse buscarSuspeitosPorS3(FaceSearchRequest request) {
         return this.pythonFaceService.buscarSuspeitosPorS3(request.getS3Path(), request.getTopK());
     }
 
-    public String buscarSuspeitosPorS3Async(MultipartFile file) throws IOException {
+    public AsyncSearchResponse buscarSuspeitosPorS3Async(MultipartFile file) throws IOException {
         String suspectSearchUrl = uploadFiles.putObject(file);
-        String response = this.pythonFaceService.buscarSuspeitosPorS3Async(suspectSearchUrl,2);
-
-
-        searchResultService.createPendingSearch(response);
-
-        return response;
+        
+        // Salva a imagem de busca no banco
+        Image savedImage = salvarImagemDeBusca(file, suspectSearchUrl);
+        
+        String requestId = this.pythonFaceService.buscarSuspeitosPorS3Async(suspectSearchUrl,2);
+        
+        searchResultService.createPendingSearch(requestId);
+        
+        return new AsyncSearchResponse(requestId, savedImage.getId());
     }
 
 
@@ -178,6 +188,19 @@ public class SuspectService {
         return imageRepository.save(img);
     }
 
+    private Image salvarImagemDeBusca(MultipartFile file, String url) throws IOException {
+        if (file == null || file.isEmpty()) throw new BadRequestException("Arquivo de imagem ausente");
+        
+        Image img = Image.builder()
+                .ownerType(OwnerType.INCIDENT)
+                .url(url)
+                .contentType(file.getContentType())
+                .sizeBytes(file.getSize())
+                .build();
+        
+        return imageRepository.save(img);
+    }
+    
     private SuspectResponse montarResponseComImagens(Suspect s) {
         SuspectResponse resp = mapper.mapTo(s, SuspectResponse.class);
         List<Image> imgs = imageRepository.findByOwnerTypeAndSuspectId(OwnerType.SUSPECT, s.getId());

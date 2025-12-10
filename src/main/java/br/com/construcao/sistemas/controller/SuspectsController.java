@@ -2,6 +2,7 @@ package br.com.construcao.sistemas.controller;
 
 import br.com.construcao.sistemas.controller.dto.request.suspect.CreateSuspectRequest;
 import br.com.construcao.sistemas.controller.dto.request.suspect.UpdateSuspectRequest;
+import br.com.construcao.sistemas.controller.dto.response.AsyncSearchResponse;
 import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.page.PageResponse;
 import br.com.construcao.sistemas.controller.dto.response.suspect.SuspectResponse;
@@ -185,18 +186,18 @@ public class SuspectsController {
 
     @Operation(
             summary = "Busca suspeitos por imagem via S3 (processamento assíncrono)",
-            description = "Envia uma requisição para busca de suspeitos usando caminho S3. Retorna job_id para acompanhar o processamento.",
+            description = "Envia uma requisição para busca de suspeitos usando caminho S3. Retorna requestId e imageId.",
             responses = {
                     @ApiResponse(
                             responseCode = "202",
                             description = "Busca enviada para processamento assíncrono.",
-                            content = @Content(schema = @Schema(implementation = AsyncFaceSearchResponse.class))
+                            content = @Content(schema = @Schema(implementation = AsyncSearchResponse.class))
                     ),
                     @ApiResponse(responseCode = "400", description = "Dados de requisição inválidos.")
             }
     )
     @PostMapping("/search-suspect-s3")
-    public ResponseEntity<String> buscarSuspeitosPorS3(@RequestPart("image") MultipartFile file) throws IOException {
+    public ResponseEntity<AsyncSearchResponse> buscarSuspeitosPorS3(@RequestPart("image") MultipartFile file) throws IOException {
         return ResponseEntity.accepted().body(this.suspectService.buscarSuspeitosPorS3Async(file));
     }
 

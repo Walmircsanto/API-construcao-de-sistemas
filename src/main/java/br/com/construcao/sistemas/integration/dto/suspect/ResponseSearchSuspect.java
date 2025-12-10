@@ -22,4 +22,7 @@ public class ResponseSearchSuspect {
     private String detectionLocation;
     private String detectionDate;
     private String horsDetection;
+    
+    // ID da imagem salva no banco
+    private Long imageId;
 }

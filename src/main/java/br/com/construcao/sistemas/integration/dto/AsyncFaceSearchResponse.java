@@ -7,8 +7,7 @@ import lombok.Data;
 public class AsyncFaceSearchResponse {
 
     private String message;
-    @JsonProperty("job_id")
-    private String jobId;
+    private String requestId;
     private String status;
     @JsonProperty("s3_path")
     private String s3Path;

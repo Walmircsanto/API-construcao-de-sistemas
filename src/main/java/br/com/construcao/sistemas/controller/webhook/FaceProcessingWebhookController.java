@@ -1,6 +1,8 @@
 package br.com.construcao.sistemas.controller.webhook;
 
+import br.com.construcao.sistemas.controller.dto.request.CompleteSearchRequest;
 import br.com.construcao.sistemas.controller.dto.request.notification.NotificationRequest;
+import br.com.construcao.sistemas.controller.dto.response.SearchResultResponse;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.controller.webhook.dto.SuspectProcessedWebhook;
 import br.com.construcao.sistemas.model.Suspect;
@@ -10,14 +12,14 @@ import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.repository.SuspectRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
 import br.com.construcao.sistemas.service.NotificationProducer;
+import br.com.construcao.sistemas.service.SearchResultService;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +33,8 @@ public class FaceProcessingWebhookController {
     private final SuspectRepository suspectRepository;
     private final NotificationProducer notificationProducer;
     private final UserRepository userRepository;
+    private final SearchResultService searchResultService;
+
     @Value("${aws.region}")
     private String awsRegion;
 
@@ -126,5 +130,24 @@ public class FaceProcessingWebhookController {
             log.error("Erro ao converter S3 path para URL: {}", s3Path, e);
             return null;
         }
+    }
+
+    @Operation(
+            summary = "Webhook para receber resultado da busca assíncrona do Python",
+            description = "Endpoint chamado pelo Python quando o processamento da busca é finalizado."
+    )
+    @PostMapping("/complete-search")
+    public ResponseEntity<Void> completeSearch(@Valid @RequestBody CompleteSearchRequest request) {
+        searchResultService.completeSearch(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(
+            summary = "Consulta resultado da busca assíncrona",
+            description = "Endpoint para polling do resultado da busca usando requestId."
+    )
+    @GetMapping("/search-result/{requestId}")
+    public ResponseEntity<SearchResultResponse> getSearchResult(@PathVariable String requestId) {
+        return ResponseEntity.ok(searchResultService.getSearchResult(requestId));
     }
 }

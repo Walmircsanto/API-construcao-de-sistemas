@@ -9,6 +9,7 @@ import br.com.construcao.sistemas.model.Incident;
 import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.User;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.model.enums.IncidentStatus;
 import br.com.construcao.sistemas.repository.IncidentRepository;
 import br.com.construcao.sistemas.repository.ImageRepository;
@@ -19,6 +20,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,14 +56,42 @@ public class IncidentService {
         incident.setIncidentStatus(IncidentStatus.ABERTO);
         incidentRepository.save(incident);
 
-        NotificationRequest notification = NotificationRequest.builder()
-                .title("Novo Incidente Detectado")
-                .body(String.format("Suspeito %s detectado com %.2f%% de confiança",
-                        suspect.getName(), request.getScore() * 100))
-                .topic("incidents")
-                .build();
+        System.out.println("Ate aqui eu chegooo " + incident.getIncidentStatus());
 
-        notificationProducer.enqueueToTopic(notification);
+        enviarNotificacao(incident, suspect, request);
+    }
+
+    private void enviarNotificacao(Incident incident, Suspect suspect, CreateIncidentRequest request) {
+        List<User> users = userRepository.findByStatus(EnumStatus.ATIVO);
+        
+        if (users.isEmpty()) {
+            return;
+        }
+        
+        List<Long> userIds = users.stream()
+                .map(User::getId)
+                .collect(Collectors.toList());
+        
+        NotificationRequest notification = new NotificationRequest();
+        notification.setTitle("Novo Incidente Detectado");
+        notification.setBody(String.format(
+                "Suspeito %s detectado com %.2f%% de confiança em %s",
+                suspect.getName(), 
+                request.getScore() * 100,
+                request.getLocation() != null ? request.getLocation() : "localização não informada"
+        ));
+        
+        if (incident.getImage() != null && incident.getImage().getUrl() != null) {
+            notification.setImage(incident.getImage().getUrl());
+        }
+        
+        notification.setTarget("INCIDENT");
+        notification.setId(incident.getId().toString());
+        notification.setAction("refresh_list");
+        notification.setUserIds(userIds);
+
+        System.out.println("enviando noitificação com o bodyyyy: "+notification.getBody());
+        notificationProducer.enqueueToUsers(notification);
     }
 
     public Page<IncidentResponse> findAll(Pageable pageable) {

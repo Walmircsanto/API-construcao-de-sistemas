@@ -55,8 +55,10 @@ public class SearchJobController {
     }
 
     @PostMapping("/simular-camera")
-    public ResponseEntity<Long> simulateCamera() {
-        Long incidentId = jobService.simulateCamera();
+    public ResponseEntity<Long> simulateCamera(
+            @RequestParam("imageWithoutBoundingBox") MultipartFile imageWithoutBoundingBox,
+            @RequestParam("imageWithBoundingBox") MultipartFile imageWithBoundingBox) throws IOException {
+        Long incidentId = jobService.simulateCamera(imageWithoutBoundingBox, imageWithBoundingBox);
         return ResponseEntity.ok(incidentId);
     }
 }

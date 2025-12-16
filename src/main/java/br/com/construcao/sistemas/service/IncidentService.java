@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -153,6 +154,18 @@ public class IncidentService {
                 .location("Câmera Simulada")
                 .imageUrl("https://mock-s3-url.com/original.jpg")
                 .imageWithBoundingBoxUrl("https://mock-s3-url.com/with-box.jpg")
+                .build();
+        
+        return incidentRepository.save(incident);
+    }
+
+    @Transactional
+    public Incident createMockIncidentWithImages(String imageUrl, String s3Path) {
+        Incident incident = Incident.builder()
+                .location("Câmera Simulada")
+                .imageUrl(imageUrl)
+                .imageWithBoundingBoxUrl(s3Path)
+                .score(98.2)
                 .build();
         
         return incidentRepository.save(incident);

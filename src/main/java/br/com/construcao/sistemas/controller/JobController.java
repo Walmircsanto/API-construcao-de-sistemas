@@ -25,9 +25,4 @@ public class JobController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/simulate-camera")
-    public ResponseEntity<Long> simulateCamera() {
-        Long incidentId = jobService.simulateCamera();
-        return ResponseEntity.ok(incidentId);
-    }
 }

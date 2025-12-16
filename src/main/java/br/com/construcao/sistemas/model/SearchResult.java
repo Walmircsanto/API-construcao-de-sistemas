@@ -30,6 +30,9 @@ public class SearchResult {
     @Column(name = "s3_path")
     private String s3Path;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SearchStatus status;

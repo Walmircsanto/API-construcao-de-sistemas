@@ -5,12 +5,14 @@ import br.com.construcao.sistemas.controller.dto.request.notification.Notificati
 import br.com.construcao.sistemas.controller.dto.response.SearchResultResponse;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.controller.webhook.dto.SuspectProcessedWebhook;
+import br.com.construcao.sistemas.controller.webhook.dto.JobCompleteRequest;
 import br.com.construcao.sistemas.model.Suspect;
 import br.com.construcao.sistemas.model.User;
 import br.com.construcao.sistemas.model.enums.EnumProcessingStatus;
 import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.repository.SuspectRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
+import br.com.construcao.sistemas.service.JobService;
 import br.com.construcao.sistemas.service.NotificationProducer;
 import br.com.construcao.sistemas.service.SearchResultService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +36,7 @@ public class FaceProcessingWebhookController {
     private final NotificationProducer notificationProducer;
     private final UserRepository userRepository;
     private final SearchResultService searchResultService;
+    private final JobService jobService;
 
     @Value("${aws.region}")
     private String awsRegion;
@@ -142,12 +145,11 @@ public class FaceProcessingWebhookController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(
-            summary = "Consulta resultado da busca assíncrona",
-            description = "Endpoint para polling do resultado da busca usando requestId."
-    )
-    @GetMapping("/search-result/{requestId}")
-    public ResponseEntity<SearchResultResponse> getSearchResult(@PathVariable String requestId) {
-        return ResponseEntity.ok(searchResultService.getSearchResult(requestId));
+    @PostMapping("/job-complete")
+    public ResponseEntity<Void> jobComplete(@RequestBody JobCompleteRequest request) {
+        jobService.completeJob(request.getS3_path(), request.getIdSuspect(), request.getRequestId());
+        return ResponseEntity.ok().build();
     }
+
+
 }

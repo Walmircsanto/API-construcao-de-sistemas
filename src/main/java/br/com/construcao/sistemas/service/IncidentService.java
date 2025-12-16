@@ -39,18 +39,14 @@ public class IncidentService {
     public void createIncident(CreateIncidentRequest request) {
         Suspect suspect = suspectRepository.findById(request.getSuspectId())
                 .orElseThrow(() -> new RuntimeException("Suspect not found"));
-        
-        Image image = imageRepository.findById(request.getImageId())
-                .orElseThrow(() -> new RuntimeException("Image not found"));
+
 
 
         Incident incident = Incident.builder()
                 .suspect(suspect)
-                .image(image)
                 .score(request.getScore())
                 .location(request.getLocation())
-                .notes(request.getNotes())
-                .processedUrl(request.getProcessedUrl())
+                .imageWithBoundingBoxUrl(request.getProcessedUrl())
                 .build();
 
         incident.setIncidentStatus(IncidentStatus.ABERTO);
@@ -81,8 +77,8 @@ public class IncidentService {
                 request.getLocation() != null ? request.getLocation() : "localização não informada"
         ));
         
-        if (incident.getImage() != null && incident.getImage().getUrl() != null) {
-            notification.setImage(incident.getImage().getUrl());
+        if (incident.getImageUrl() != null) {
+            notification.setImage(incident.getImageUrl());
         }
         
         notification.setTarget("INCIDENT");
@@ -121,9 +117,7 @@ public class IncidentService {
                     .orElseThrow(() -> new RuntimeException("User not found"));
             incident.setAssignedUser(user);
         }
-        if (request.getNotes() != null) {
-            incident.setNotes(request.getNotes());
-        }
+
 
         return toResponse(incidentRepository.save(incident));
     }
@@ -148,10 +142,26 @@ public class IncidentService {
         incidentRepository.deleteById(id);
     }
 
+    @Transactional
+    public Incident saveIncident(Incident incident) {
+        return incidentRepository.save(incident);
+    }
+
+    @Transactional
+    public Incident createMockIncident() {
+        Incident incident = Incident.builder()
+                .location("Câmera Simulada")
+                .imageUrl("https://mock-s3-url.com/original.jpg")
+                .imageWithBoundingBoxUrl("https://mock-s3-url.com/with-box.jpg")
+                .build();
+        
+        return incidentRepository.save(incident);
+    }
+
     private IncidentResponse toResponse(Incident incident) {
         IncidentResponse response = mapper.mapTo(incident, IncidentResponse.class);
-        if (incident.getImage() != null) {
-            response.setImageUrl(incident.getImage().getUrl());
+        if (incident.getImageUrl() != null) {
+            response.setImageUrl(incident.getImageWithBoundingBoxUrl());
         }
         return response;
     }

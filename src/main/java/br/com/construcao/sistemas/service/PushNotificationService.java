@@ -2,6 +2,7 @@ package br.com.construcao.sistemas.service;
 
 import br.com.construcao.sistemas.controller.dto.response.notification.NotificationResponse;
 import br.com.construcao.sistemas.model.User;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.repository.UserRepository;
 import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
@@ -147,6 +148,13 @@ public class PushNotificationService {
     }
 
     public void sendNotificationToAll(String title, String body, String target, String id, String imageURL) {
-        sendToTopic("notif.topic", title, body, target, id, "REFRESHLIST", imageURL, null);
+        List<Long> userIds = users.findByStatus(EnumStatus.ATIVO)
+                .stream()
+                .map(User::getId)
+                .toList();
+        
+        if (!userIds.isEmpty()) {
+            sendToUserIds(userIds, title, body, target, imageURL, "REFRESHLIST", id, null);
+        }
     }
 }

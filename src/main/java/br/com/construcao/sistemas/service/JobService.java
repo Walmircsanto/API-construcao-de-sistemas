@@ -102,6 +102,7 @@ public class JobService {
                 "Novo Incidente",
                 "Um novo incidente foi registrado",
                 "INCIDENT",
+                job.getIncident().getImageUrl(),
                 savedIncident.getId().toString()
         );
     }
@@ -117,6 +118,7 @@ public class JobService {
                 "Câmera Detectou Suspeito",
                 "Um suspeito foi detectado pela câmera",
                 "INCIDENT",
+                imageUrl,
                 incident.getId().toString()
         );
 

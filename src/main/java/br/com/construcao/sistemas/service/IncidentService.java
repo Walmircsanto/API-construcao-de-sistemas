@@ -150,17 +150,6 @@ public class IncidentService {
     }
 
     @Transactional
-    public Incident createMockIncident() {
-        Incident incident = Incident.builder()
-                .location("Câmera Simulada")
-                .imageUrl("https://mock-s3-url.com/original.jpg")
-                .imageWithBoundingBoxUrl("https://mock-s3-url.com/with-box.jpg")
-                .build();
-        
-        return incidentRepository.save(incident);
-    }
-
-    @Transactional
     public Incident createMockIncidentWithImages(String imageUrl, String s3Path) {
         Incident incident = Incident.builder()
                 .location("Câmera Simulada")

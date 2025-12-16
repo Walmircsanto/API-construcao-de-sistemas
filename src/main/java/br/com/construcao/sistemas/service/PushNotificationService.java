@@ -146,7 +146,7 @@ public class PushNotificationService {
         }
     }
 
-    public void sendNotificationToAll(String title, String body, String target, String id) {
-        sendToTopic("all_users", title, body, target, id, "REFRESHLIST", null, null);
+    public void sendNotificationToAll(String title, String body, String target, String id, String imageURL) {
+        sendToTopic("notif.topic", title, body, target, id, "REFRESHLIST", imageURL, null);
     }
 }

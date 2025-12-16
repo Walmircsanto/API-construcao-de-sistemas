@@ -47,6 +47,7 @@ public class IncidentService {
                 .suspect(suspect)
                 .score(request.getScore())
                 .location(request.getLocation())
+                .suspect(this.suspectRepository.findById(1L).get())
                 .imageWithBoundingBoxUrl(request.getProcessedUrl())
                 .build();
 
@@ -165,6 +166,7 @@ public class IncidentService {
                 .location("Câmera Simulada")
                 .imageUrl(imageUrl)
                 .imageWithBoundingBoxUrl(s3Path)
+                .incidentStatus(IncidentStatus.EM_PROCESSAMENTO)
                 .score(98.2)
                 .build();
         

@@ -51,12 +51,12 @@ public class IncidentController {
             }
     )
     @GetMapping
-    public ResponseEntity<PageResponse<IncidentResponse>> listIncidents(
+    public ResponseEntity<Page<IncidentResponse>> listIncidents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
         Page<IncidentResponse> incidents = incidentService.findAll(PageRequest.of(page, Math.min(size, 100)));
-        return ResponseEntity.ok(PageResponse.of(incidents));
+        return ResponseEntity.ok(incidents);
     }
 
     @Operation(

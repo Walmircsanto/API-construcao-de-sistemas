@@ -65,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/nexus/webhooks/job-complete").permitAll()
                         .requestMatchers("/api/nexus/webhooks/**").permitAll()
                         .requestMatchers("/api/nexus/reports/access-logs/**").permitAll()
+                        .requestMatchers("/api/nexus/simular-camera").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

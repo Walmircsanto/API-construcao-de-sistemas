@@ -17,11 +17,14 @@ import br.com.construcao.sistemas.repository.SuspectRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -93,7 +96,13 @@ public class IncidentService {
     }
 
     public Page<IncidentResponse> findAll(Pageable pageable) {
-        return incidentRepository.findAll(pageable)
+        Pageable sortedByRecent = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by("createdAt").descending()
+        );
+
+        return incidentRepository.findAll(sortedByRecent)
                 .map(this::toResponse);
     }
 
@@ -151,12 +160,20 @@ public class IncidentService {
 
     @Transactional
     public Incident createMockIncidentWithImages(String imageUrl, String s3Path) {
+        List<Suspect> suspects = suspectRepository.findAll();
+
+        Suspect selectedSuspect = null;
+        if (!suspects.isEmpty()) {
+            Collections.shuffle(suspects);
+            selectedSuspect = suspects.get(0);
+        }
         Incident incident = Incident.builder()
                 .location("Câmera Simulada")
                 .imageUrl(imageUrl)
                 .imageWithBoundingBoxUrl(s3Path)
-                .incidentStatus(IncidentStatus.EM_PROCESSAMENTO)
+                .incidentStatus(IncidentStatus.ABERTO)
                 .score(98.2)
+                .suspect(selectedSuspect)
                 .build();
         
         return incidentRepository.save(incident);

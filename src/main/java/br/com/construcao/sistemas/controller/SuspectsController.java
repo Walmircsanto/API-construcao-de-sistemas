@@ -205,4 +205,13 @@ public class SuspectsController {
     public ResponseEntity<ResponseSearchSuspect> buscarSuspeitosPorFile(@RequestPart("image") MultipartFile file, @RequestPart("topK") Integer topK) throws IOException {
         return ResponseEntity.ok(this.suspectService.buscarSuspeitosPorImagem(file, topK));
     }
+
+    @PostMapping("/find-search-suspect")
+    public ResponseEntity<String> findSearchSuspect(
+            @RequestParam("image") MultipartFile image,
+            @RequestParam("location") String location) throws IOException {
+        
+        String jobId = suspectService.createSearchJob(image, location);
+        return ResponseEntity.ok(jobId);
+    }
 }

@@ -15,10 +15,7 @@ public class CreateIncidentRequest {
     
     @NotNull(message = "Suspect ID is required")
     private Long suspectId;
-    
-    @NotNull(message = "Image ID is required")
-    private Long imageId;
-    
+
     @NotNull(message = "Score is required")
     @Positive(message = "Score must be positive")
     private Double score;

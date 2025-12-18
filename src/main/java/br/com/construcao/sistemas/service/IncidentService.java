@@ -17,10 +17,14 @@ import br.com.construcao.sistemas.repository.SuspectRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,18 +43,15 @@ public class IncidentService {
     public void createIncident(CreateIncidentRequest request) {
         Suspect suspect = suspectRepository.findById(request.getSuspectId())
                 .orElseThrow(() -> new RuntimeException("Suspect not found"));
-        
-        Image image = imageRepository.findById(request.getImageId())
-                .orElseThrow(() -> new RuntimeException("Image not found"));
+
 
 
         Incident incident = Incident.builder()
                 .suspect(suspect)
-                .image(image)
                 .score(request.getScore())
                 .location(request.getLocation())
-                .notes(request.getNotes())
-                .processedUrl(request.getProcessedUrl())
+                .suspect(this.suspectRepository.findById(1L).get())
+                .imageWithBoundingBoxUrl(request.getProcessedUrl())
                 .build();
 
         incident.setIncidentStatus(IncidentStatus.ABERTO);
@@ -81,8 +82,8 @@ public class IncidentService {
                 request.getLocation() != null ? request.getLocation() : "localização não informada"
         ));
         
-        if (incident.getImage() != null && incident.getImage().getUrl() != null) {
-            notification.setImage(incident.getImage().getUrl());
+        if (incident.getImageUrl() != null) {
+            notification.setImage(incident.getImageUrl());
         }
         
         notification.setTarget("INCIDENT");
@@ -95,7 +96,13 @@ public class IncidentService {
     }
 
     public Page<IncidentResponse> findAll(Pageable pageable) {
-        return incidentRepository.findAll(pageable)
+        Pageable sortedByRecent = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by("createdAt").descending()
+        );
+
+        return incidentRepository.findAll(sortedByRecent)
                 .map(this::toResponse);
     }
 
@@ -121,9 +128,7 @@ public class IncidentService {
                     .orElseThrow(() -> new RuntimeException("User not found"));
             incident.setAssignedUser(user);
         }
-        if (request.getNotes() != null) {
-            incident.setNotes(request.getNotes());
-        }
+
 
         return toResponse(incidentRepository.save(incident));
     }
@@ -148,10 +153,31 @@ public class IncidentService {
         incidentRepository.deleteById(id);
     }
 
+    @Transactional
+    public Incident saveIncident(Incident incident) {
+        return incidentRepository.save(incident);
+    }
+
+    @Transactional
+    public Incident createMockIncidentWithImages(String imageUrl, String s3Path,Long suspectId) {
+        Suspect selectedSuspect = suspectRepository.findById(suspectId)
+                .orElseThrow(() -> new RuntimeException("Suspeito não encontrado com o ID: " + suspectId));
+        Incident incident = Incident.builder()
+                .location("Câmera Simulada")
+                .imageUrl(imageUrl)
+                .imageWithBoundingBoxUrl(s3Path)
+                .incidentStatus(IncidentStatus.ABERTO)
+                .score(98.2)
+                .suspect(selectedSuspect)
+                .build();
+        
+        return incidentRepository.save(incident);
+    }
+
     private IncidentResponse toResponse(Incident incident) {
         IncidentResponse response = mapper.mapTo(incident, IncidentResponse.class);
-        if (incident.getImage() != null) {
-            response.setImageUrl(incident.getImage().getUrl());
+        if (incident.getImageUrl() != null) {
+            response.setImageUrl(incident.getImageWithBoundingBoxUrl());
         }
         return response;
     }

@@ -22,6 +22,8 @@ import br.com.construcao.sistemas.model.enums.OwnerType;
 import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.SuspectRepository;
+import br.com.construcao.sistemas.util.helpers.AuthUserResolver;
+import br.com.construcao.sistemas.model.User;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
@@ -44,6 +46,8 @@ public class SuspectService {
     private final UploadFiles uploadFiles;
     private final PythonFaceService pythonFaceService;
     private final SearchResultService searchResultService;
+    private final JobService jobService;
+    private final AuthUserResolver authUserResolver;
 
     @Transactional
     public SuspectResponse create(CreateSuspectRequest req, @Nullable MultipartFile file) throws IOException {
@@ -159,7 +163,8 @@ public class SuspectService {
         
         String requestId = this.pythonFaceService.buscarSuspeitosPorS3Async(suspectSearchUrl,2);
         
-        searchResultService.createPendingSearch(requestId);
+        Long userId = br.com.construcao.sistemas.util.SecurityUtils.getCurrentUserId();
+        searchResultService.createPendingSearch(requestId, userId);
         
         return new AsyncSearchResponse(requestId, savedImage.getId());
     }
@@ -201,6 +206,12 @@ public class SuspectService {
         return imageRepository.save(img);
     }
     
+    @Transactional
+    public String createSearchJob(MultipartFile image, String location) throws IOException {
+        User currentUser = authUserResolver.currentUser();
+        return jobService.createSearchJob(image, location, currentUser);
+    }
+
     private SuspectResponse montarResponseComImagens(Suspect s) {
         SuspectResponse resp = mapper.mapTo(s, SuspectResponse.class);
         List<Image> imgs = imageRepository.findByOwnerTypeAndSuspectId(OwnerType.SUSPECT, s.getId());

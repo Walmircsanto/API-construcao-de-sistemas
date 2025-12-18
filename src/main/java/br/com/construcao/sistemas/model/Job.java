@@ -1,6 +1,6 @@
 package br.com.construcao.sistemas.model;
 
-import br.com.construcao.sistemas.model.enums.SearchStatus;
+import br.com.construcao.sistemas.model.enums.JobStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,32 +10,31 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "search_results")
+@Table(name = "jobs")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SearchResult {
+public class Job {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column( unique = true)
-    private String requestId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User userRequest;
 
-    @Column(name = "suspect_id")
-    private Long suspectId;
-
-    @Column(name = "s3_path")
-    private String s3Path;
-
-    @Column(name = "user_id")
-    private Long userId;
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "incident_id")
+    private Incident incident;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private SearchStatus status;
+    private JobStatus status;
+
+    @Column(name = "job_id_request", unique = true, nullable = false)
+    private String jobIdRequest;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

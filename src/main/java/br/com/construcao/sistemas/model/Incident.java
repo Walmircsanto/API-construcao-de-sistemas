@@ -2,50 +2,53 @@ package br.com.construcao.sistemas.model;
 
 import br.com.construcao.sistemas.model.enums.IncidentStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tb_incident")
-@Getter
-@Setter
+@Table(name = "incidents")
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Incident extends BaseEntity {
+public class Incident {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 50)
+    private String location;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private IncidentStatus incidentStatus;
+
+    @Column(name = "s3_path")
+    private String imageWithBoundingBoxUrl;
+
+    private Double score;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "suspect_id")
     private Suspect suspect;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "image_id")
-    private Image image;
-
-    private Double score;
-    private String location;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private IncidentStatus incidentStatus;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_user_id")
     private User assignedUser;
 
-    @Column(length = 2000)
-    private String notes;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    private String processedUrl;
-
-    @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = false)
-    private List<Image> images = new ArrayList<>();
-
-    // add uma variavel boolean que vai marcar o incident como visualziado ou não, fazer isso no momento de atualizar o IncidentStatus
-
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

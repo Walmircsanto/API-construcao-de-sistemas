@@ -2,6 +2,7 @@ package br.com.construcao.sistemas.service;
 
 import br.com.construcao.sistemas.controller.dto.response.notification.NotificationResponse;
 import br.com.construcao.sistemas.model.User;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
 import br.com.construcao.sistemas.repository.UserRepository;
 import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
@@ -119,6 +120,41 @@ public class PushNotificationService {
             log.info("✅ Notificação enviada para tópico: {}", topic);
         } catch (FirebaseMessagingException e) {
             log.error("❌ Erro ao enviar notificação para tópico {}: {}", topic, e.getMessage(), e);
+        }
+    }
+
+    public void sendNotificationToUser(String fcmToken, String title, String body, String target, String id) {
+        if (fcmToken == null || fcmToken.isBlank()) {
+            return;
+        }
+
+        Map<String, String> dataPayload = new HashMap<>();
+        dataPayload.put("title", title);
+        dataPayload.put("body", body);
+        dataPayload.put("target", target);
+        dataPayload.put("id", id);
+        dataPayload.put("click_action", "FLUTTER_NOTIFICATION_CLICK");
+
+        Message message = Message.builder()
+                .setToken(fcmToken)
+                .putAllData(dataPayload)
+                .build();
+
+        try {
+            firebase.send(message);
+        } catch (FirebaseMessagingException e) {
+            log.error("Erro ao enviar notificação: {}", e.getMessage());
+        }
+    }
+
+    public void sendNotificationToAll(String title, String body, String target, String id, String imageURL) {
+        List<Long> userIds = users.findByStatus(EnumStatus.ATIVO)
+                .stream()
+                .map(User::getId)
+                .toList();
+        
+        if (!userIds.isEmpty()) {
+            sendToUserIds(userIds, title, body, target, imageURL, "REFRESHLIST", id, null);
         }
     }
 }

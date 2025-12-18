@@ -2,6 +2,7 @@ package br.com.construcao.sistemas.service;
 
 import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
 import br.com.construcao.sistemas.controller.dto.request.CompleteSearchRequest;
+import br.com.construcao.sistemas.controller.dto.request.notification.NotificationRequest;
 import br.com.construcao.sistemas.controller.dto.response.SearchResultResponse;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import br.com.construcao.sistemas.integration.dto.suspect.ResponseSearchSuspect;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,12 +27,14 @@ public class SearchResultService {
     private final SearchResultRepository searchResultRepository;
     private final SuspectRepository suspectRepository;
     private final MyModelMapper mapper;
+    private final NotificationProducer notificationProducer;
 
     @Transactional
-    public void createPendingSearch(String requestId) {
+    public void createPendingSearch(String requestId, Long userId) {
         System.out.println("RequestId: " + requestId);
         SearchResult searchResult = SearchResult.builder()
                 .requestId(requestId)
+                .userId(userId)
                 .status(SearchStatus.PENDING)
                 .build();
         searchResultRepository.save(searchResult);
@@ -47,36 +51,33 @@ public class SearchResultService {
         searchResult.setCompletedAt(LocalDateTime.now());
         
         searchResultRepository.save(searchResult);
+        
+        // Notifica apenas o usuário que fez a requisição
+        enviarNotificacaoParaUsuario(searchResult, request.getIdSuspect());
     }
 
-    @Transactional
-    public SearchResultResponse getSearchResult(String requestId) {
-        System.out.println("Chego aqui com o RequestId: " + requestId);
-        SearchResult searchResult = searchResultRepository.findByRequestId(requestId)
-                .orElseThrow(() -> new NotFoundException("Search result not found"));
 
-        System.out.println("Não chego aqui");
-        SearchResultResponse response = new SearchResultResponse();
-        response.setRequestId(searchResult.getRequestId());
-        response.setStatus(searchResult.getStatus());
-        
-        if (searchResult.getStatus() == SearchStatus.COMPLETED && searchResult.getSuspectId() != null) {
-            Suspect suspect = suspectRepository.findById(searchResult.getSuspectId())
-                    .orElseThrow(() -> new NotFoundException("Suspect not found"));
-            
-            ResponseSearchSuspect suspectData = new ResponseSearchSuspect();
-            suspectData.setSuspectId(suspect.getId());
-            suspectData.setName(suspect.getName());
-            suspectData.setBirthday(suspect.getBirthDate());
-            suspectData.setStatus(suspect.getSuspectStatus());
-            suspectData.setProcessedUrl(searchResult.getS3Path());
-            suspectData.setDetectionLocation("Câmera 05");
-            suspectData.setDetectionDate(LocalDate.now().toString());
-            suspectData.setHorsDetection(LocalTime.now().toString());
-            
-            response.setSuspectData(suspectData);
+    
+    private void enviarNotificacaoParaUsuario(SearchResult searchResult, Long suspectId) {
+        if (searchResult.getUserId() == null) {
+            return;
         }
         
-        return response;
+        NotificationRequest notification = new NotificationRequest();
+        notification.setTitle("Busca Concluída");
+        
+        if (suspectId != null) {
+            notification.setBody("Suspeito encontrado na sua busca por imagem!");
+        } else {
+            notification.setBody("Busca por imagem concluída. Nenhum suspeito encontrado.");
+        }
+        
+        notification.setTarget("INCIDENT");
+        notification.setId(searchResult.getRequestId()); // usar esse ID para buscar esse JOB
+                                                         // GET JOB
+        notification.setAction("view_result");
+        notification.setUserIds(List.of(searchResult.getUserId()));
+        
+        notificationProducer.enqueueToUsers(notification);
     }
 }

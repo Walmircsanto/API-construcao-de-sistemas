@@ -22,4 +22,12 @@ public class AuthUserResolver {
                 .map(User::getId)
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
     }
+
+    public User currentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) throw new UnauthorizedException("Não autenticado");
+        String email = auth.getName();
+        return users.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+    }
 }

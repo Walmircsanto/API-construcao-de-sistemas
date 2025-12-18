@@ -159,14 +159,9 @@ public class IncidentService {
     }
 
     @Transactional
-    public Incident createMockIncidentWithImages(String imageUrl, String s3Path) {
-        List<Suspect> suspects = suspectRepository.findAll();
-
-        Suspect selectedSuspect = null;
-        if (!suspects.isEmpty()) {
-            Collections.shuffle(suspects);
-            selectedSuspect = suspects.get(0);
-        }
+    public Incident createMockIncidentWithImages(String imageUrl, String s3Path,Long suspectId) {
+        Suspect selectedSuspect = suspectRepository.findById(suspectId)
+                .orElseThrow(() -> new RuntimeException("Suspeito não encontrado com o ID: " + suspectId));
         Incident incident = Incident.builder()
                 .location("Câmera Simulada")
                 .imageUrl(imageUrl)

@@ -108,11 +108,11 @@ public class JobService {
     }
 
     @Transactional
-    public Long simulateCamera(MultipartFile imageWithoutBoundingBox, MultipartFile imageWithBoundingBox) throws IOException {
+    public Long simulateCamera(MultipartFile imageWithoutBoundingBox, MultipartFile imageWithBoundingBox, Long suspectId) throws IOException {
         String imageUrl = uploadFiles.putObject(imageWithoutBoundingBox);
         String s3Path = uploadFiles.putObject(imageWithBoundingBox);
         
-        Incident incident = incidentService.createMockIncidentWithImages(imageUrl, s3Path);
+        Incident incident = incidentService.createMockIncidentWithImages(imageUrl, s3Path,suspectId);
 
         pushNotificationService.sendNotificationToAll(
                 "Câmera Detectou Suspeito",

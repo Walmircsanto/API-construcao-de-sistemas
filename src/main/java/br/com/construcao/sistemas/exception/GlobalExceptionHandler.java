@@ -1,5 +1,6 @@
 package br.com.construcao.sistemas.exception;
 
+import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(NotFoundException.class)
+        public ResponseEntity<ExceptionResponse> handleNotFound(NotFoundException ex) {
+            ExceptionResponse response = new  ExceptionResponse(new Date(), ex.getMessage(), "Not found");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponse> handleGenericException(Exception ex) {
         ExceptionResponse response = new ExceptionResponse(new Date(), "Something went wrong. Please try again later.", ex.getMessage());
@@ -54,12 +61,6 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleRuntime(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body("Não foi possível completar o cadastro.");
-    }
 
 
 

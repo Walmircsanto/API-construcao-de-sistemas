@@ -4,7 +4,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class MyModelMapper {
@@ -17,7 +16,7 @@ public class MyModelMapper {
     public <D, T> List<D> toList(List<T> entityList, Class<D> outClass) {
         return entityList.stream()
                 .map(entity -> MODEL_MAPPER.map(entity, outClass))
-                .collect(Collectors.toList());
+                .toList();
     }
 
 }

@@ -2,43 +2,82 @@ package br.com.construcao.sistemas.service;
 
 
 import br.com.construcao.sistemas.controller.dto.mapper.MyModelMapper;
-import br.com.construcao.sistemas.controller.dto.request.login.UpdatePasswordRequest;
-import br.com.construcao.sistemas.controller.dto.request.login.UpdateUserRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdatePasswordRequest;
+import br.com.construcao.sistemas.controller.dto.request.user.UpdateUserRequest;
 import br.com.construcao.sistemas.controller.dto.request.user.CreateUserRequest;
+import br.com.construcao.sistemas.controller.dto.response.image.ImageResponse;
 import br.com.construcao.sistemas.controller.dto.response.user.UserResponse;
-import br.com.construcao.sistemas.controller.exceptions.ConflictException;
+import br.com.construcao.sistemas.controller.exceptions.BadRequestException;
 import br.com.construcao.sistemas.controller.exceptions.NotFoundException;
+import br.com.construcao.sistemas.exception.ConflictException;
+import br.com.construcao.sistemas.exception.InternalServerErrorException;
+import br.com.construcao.sistemas.exception.UnauthorizedException;
+import br.com.construcao.sistemas.model.Image;
 import br.com.construcao.sistemas.model.User;
+import br.com.construcao.sistemas.model.enums.AuthProvider;
+import br.com.construcao.sistemas.model.enums.EnumStatus;
+import br.com.construcao.sistemas.model.enums.OwnerType;
+import br.com.construcao.sistemas.model.enums.EnumRole;
+import br.com.construcao.sistemas.repository.ImageRepository;
 import br.com.construcao.sistemas.repository.UserRepository;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import br.com.construcao.sistemas.util.helpers.PasswordGenerator;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Pageable;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository repo;
+    private final ImageRepository imageRepo;
+    private final UploadFiles uploadFiles;
     private final PasswordEncoder encoder;
+    private final PasswordGenerator generator;
+    private final EmailService emailService;
     private final MyModelMapper mapper;
 
-    public UserService(UserRepository userRepository, PasswordEncoder encoder, MyModelMapper mapper) {
-        this.repo = userRepository;
-        this.encoder = encoder;
-        this.mapper = mapper;
-    }
+    @Transactional
+    public UserResponse create(CreateUserRequest req, @Nullable MultipartFile file) throws IOException {
+        String email = req.getEmail().trim().toLowerCase();
+        if (repo.existsByEmail(email)) throw new ConflictException("E-mail já cadastrado");
 
-    public UserResponse create(CreateUserRequest req){
-        if (repo.existsByEmail(req.getEmail())) {
-            throw new ConflictException("E-mail já cadastrado");
-        }
         User user = mapper.mapTo(req, User.class);
-        user.setPassword(encoder.encode(req.getPassword()));
+        user.setEmail(email);
 
-        return mapper.mapTo(repo.save(user), UserResponse.class);
+        boolean mustGenerateProvisional = (req.getPassword() == null || req.getPassword().isBlank());
+        boolean markProvisional = Boolean.TRUE.equals(req.getProvisionalPassword()) || mustGenerateProvisional;
+
+        String rawPassword = mustGenerateProvisional ? generator.generate(10) : req.getPassword();
+        user.setPassword(encoder.encode(rawPassword));
+        user.setProvisionalPassword(markProvisional);
+        user.setProvisionalPasswordExpiresAt(markProvisional ? Instant.now().plus(Duration.ofDays(7)) : null);
+
+        if (user.getRole() == null) user.setRole(EnumRole.SECURITY);
+        if (user.getProvider() == null) user.setProvider(AuthProvider.LOCAL);
+
+        user = repo.save(user);
+
+        if (file != null && !file.isEmpty()) {
+            imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
+            saveProfileImage(user, file);
+        }
+
+        if (markProvisional) {
+            emailService.sendProvisionalPassword(
+                    user.getEmail(), user.getName(), rawPassword, user.getProvisionalPasswordExpiresAt()
+            );
+        }
+
+        return enrichWithProfileImage(mapper.mapTo(user, UserResponse.class), user.getId());
     }
 
     public UserResponse get(Long id){
@@ -47,33 +86,175 @@ public class UserService {
         return mapper.mapTo(user, UserResponse.class);
     }
 
-    public List<UserResponse> list(){
-        return mapper.toList(repo.findAll(), UserResponse.class);
+    public Page<UserResponse> listAllByFilters(EnumRole role, String query, EnumStatus status, Pageable pageable){
+        return repo.findAllByFilters(role, query, status, pageable)
+                .map(u -> enrichWithProfileImage(mapper.mapTo(u, UserResponse.class), u.getId()));
     }
 
-    public UserResponse update(Long id, UpdateUserRequest req){
+    @Transactional
+    public UserResponse update(Long id, UpdateUserRequest req, @Nullable MultipartFile file) throws IOException {
         User user = repo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
-        mapper.mapTo(req, user.getClass());
         if (req.getName() != null) user.setName(req.getName());
-        if (req.getEmail() != null) user.setEmail(req.getEmail());
-        if (req.getRole() != null) user.setRole(req.getRole());
-        if (req.getEnabled() != null) user.setEnabled(req.getEnabled());
-        if (req.getLocked() != null) user.setLocked(req.getLocked());
 
-        return mapper.mapTo(repo.save(user), UserResponse.class);
+        if (req.getEmail() != null) {
+            String newEmail = req.getEmail().trim().toLowerCase();
+            if (!newEmail.equalsIgnoreCase(user.getEmail()) && repo.existsByEmail(newEmail)) {
+                throw new ConflictException("E-mail já cadastrado");
+            }
+            user.setEmail(newEmail);
+        }
+
+        if (req.getRole() != null) user.setRole(req.getRole());
+
+        if (req.getStatus() != null) {
+
+            EnumStatus newStatus = req.getStatus();
+            user.setStatus(newStatus);
+
+            switch (newStatus) {
+
+                case ATIVO -> {
+                    user.setEnabled(true);
+                    user.setLocked(false);
+                    user.setFailedLogins(0);
+                }
+
+                case INATIVO -> {
+                    user.setEnabled(false);
+                    user.setLocked(false);
+                }
+
+                case BLOQUEADO -> {
+                    user.setEnabled(false);
+                    user.setLocked(true);
+                }
+            }
+        }
+
+        user = repo.save(user);
+
+        if (file != null && !file.isEmpty()) {
+            imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
+
+            String url = uploadFiles.putObject(file);
+            if (url == null) throw new InternalServerErrorException("Falha ao salvar no bucket");
+
+            Image img = Image.builder()
+                    .user(user)
+                    .ownerType(OwnerType.USER)
+                    .url(url)
+                    .contentType(file.getContentType())
+                    .sizeBytes(file.getSize())
+                    .build();
+
+            imageRepo.save(img);
+        }
+
+        UserResponse resp = mapper.mapTo(user, UserResponse.class);
+        imageRepo.findFirstByUser_IdAndOwnerType(user.getId(), OwnerType.USER)
+                .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
+
+        return resp;
     }
 
+    @Transactional
     public void updatePassword(Long id, UpdatePasswordRequest req){
-        User user = repo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        User user = repo.findById(id).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+
+        if (req.getCurrentPassword() != null && !encoder.matches(req.getCurrentPassword(), user.getPassword())) {
+            throw new UnauthorizedException("Senha atual inválida");
+        }
+        if (req.getNewPassword() == null || req.getNewPassword().length() < 6) {
+            throw new BadRequestException("Senha deve ter pelo menos 6 caracteres");
+        }
+
         user.setPassword(encoder.encode(req.getNewPassword()));
+        user.setProvisionalPassword(false);
+        user.setProvisionalPasswordExpiresAt(null);
+        user.setLastPasswordChangeAt(Instant.now());
+
         repo.save(user);
     }
 
-    public void delete(Long id){
-        if (!repo.existsById(id)) throw new NotFoundException("Usuário não encontrado");
+    @Transactional
+    public void delete(Long id) {
+        if (!repo.existsById(id)) {
+            throw new NotFoundException("Usuário não encontrado");
+        }
+
+        imageRepo.deleteByUser_IdAndOwnerType(id, OwnerType.USER);
+
         repo.deleteById(id);
     }
+
+    @Transactional
+    public void clearFcmToken(Long userId) {
+        User u = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        u.setFcmToken(null);
+        u.setFcmTokenUpdatedAt(Instant.now());
+        repo.save(u);
+    }
+
+    @Transactional
+    public void updateFcmToken(Long userId, String token) {
+        if (token == null || token.isBlank()) throw new BadRequestException("Token FCM inválido");
+        User u = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        u.setFcmToken(token);
+        u.setFcmTokenUpdatedAt(Instant.now());
+        repo.save(u);
+    }
+
+    @Transactional
+    public ImageResponse setProfileImage(Long userId, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) throw new BadRequestException("Arquivo de imagem ausente");
+
+        User user = repo.findById(userId).orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+
+        imageRepo.deleteByUser_IdAndOwnerType(user.getId(), OwnerType.USER);
+
+        Image img = saveProfileImage(user, file);
+        return new ImageResponse(img.getId(), img.getUrl(), img.getContentType(), img.getSizeBytes());
+    }
+
+    private Image saveProfileImage(User user, MultipartFile file) throws IOException {
+        String url = uploadFiles.putObject(file);
+        if (url == null) throw new InternalServerErrorException("Falha ao salvar no bucket");
+
+        Image img = Image.builder()
+                .user(user)
+                .ownerType(OwnerType.USER)
+                .url(url)
+                .contentType(file.getContentType())
+                .sizeBytes(file.getSize())
+                .build();
+        return imageRepo.save(img);
+    }
+
+    private UserResponse enrichWithProfileImage(UserResponse resp, Long userId) {
+        imageRepo.findFirstByUser_IdAndOwnerType(userId, OwnerType.USER)
+                .ifPresent(img -> resp.setProfileImageUrl(img.getUrl()));
+        return resp;
+    }
+
+    public boolean userExistByEmail(String email) {
+     return this.repo.existsByEmail(email);
+    }
+
+    @Transactional
+    public UserResponse createdUserByGmail(CreateUserRequest userRequest){
+        User user = mapper.mapTo(userRequest, User.class);
+
+        // Gera senha temporária para usuários OAuth2
+        String tempPassword = generator.generate(12);
+        user.setPassword(encoder.encode(tempPassword));
+        user.setProvisionalPassword(true);
+        user.setProvisionalPasswordExpiresAt(Instant.now().plus(Duration.ofDays(30)));
+
+        user = repo.save(user);
+
+        return mapper.mapTo(user, UserResponse.class);
+    }
 }
+

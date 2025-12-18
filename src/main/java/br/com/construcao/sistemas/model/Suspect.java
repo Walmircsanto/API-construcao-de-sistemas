@@ -1,99 +1,49 @@
 package br.com.construcao.sistemas.model;
 
 
+import br.com.construcao.sistemas.model.enums.EnumProcessingStatus;
+import br.com.construcao.sistemas.model.enums.SuspectStatus;
 import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_suspect")
-public class Suspect {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Suspect extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable=false)
     private String name;
 
-    private int age;
-
-    private String urlImage;
+    private LocalDate birthDate;
 
     @Column(nullable=false, unique = true, length = 14)
     private String cpf;
 
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private SuspectStatus suspectStatus = SuspectStatus.FORAGIDO;
 
-    public Suspect() {
-    }
+    @OneToMany(mappedBy = "suspect", cascade = CascadeType.ALL, orphanRemoval = false)
+    private List<Image> images = new ArrayList<>();
 
-    public Suspect(Long id, String name, int age, String urlImage, String cpf, String description) {
-        this.id = id;
-        this.name = name;
-        this.age = age;
-        this.urlImage = urlImage;
-        this.cpf = cpf;
-        this.description = description;
-    }
+    @Column(name = "face_processing_job_id")
+    private String faceProcessingJobId;
 
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getAge() {
-        return age;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    public String getUrlImage() {
-        return urlImage;
-    }
-
-    public void setUrlImage(String urlImage) {
-        this.urlImage = urlImage;
-    }
-
-    public String getCpf() {
-        return cpf;
-    }
-
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    @Override
-    public String toString() {
-        return "Suspect{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", age=" + age +
-                ", urlImage='" + urlImage + '\'' +
-                ", cpf='" + cpf + '\'' +
-                ", description='" + description + '\'' +
-                '}';
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "face_processing_status")
+    private EnumProcessingStatus faceProcessingStatus = EnumProcessingStatus.PENDENTE;
 }

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "tb_access_log")
+@Table(name = "tb_access_logg")
 @Getter
 @Setter
 @NoArgsConstructor
